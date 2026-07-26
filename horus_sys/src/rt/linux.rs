@@ -3,6 +3,24 @@
 use super::RtCapabilities;
 use std::time::Duration;
 
+/// Build a `sched_param` carrying just a priority.
+///
+/// `sched_param` is not field-compatible across libcs: glibc exposes only
+/// `sched_priority`, while musl also carries the four POSIX sporadic-server
+/// fields (`sched_ss_low_priority`, `sched_ss_repl_period`,
+/// `sched_ss_init_budget`, `sched_ss_max_repl`). A struct literal naming only
+/// `sched_priority` therefore fails to compile on musl (E0063), which is what
+/// broke the Alpine image in docker-distro-tests. Zero-initialising and then
+/// setting the one field we care about is correct on both: the sporadic-server
+/// members are ignored by SCHED_FIFO and SCHED_OTHER.
+fn sched_param_with_priority(priority: i32) -> libc::sched_param {
+    // SAFETY: sched_param is a plain C struct of integer fields; all-zero is a
+    // valid bit pattern for it.
+    let mut param: libc::sched_param = unsafe { std::mem::zeroed() };
+    param.sched_priority = priority;
+    param
+}
+
 /// Detect Linux RT capabilities.
 pub(super) fn detect_capabilities() -> RtCapabilities {
     let kernel_version = get_kernel_version();
@@ -32,9 +50,7 @@ pub(super) fn detect_capabilities() -> RtCapabilities {
 /// Set SCHED_FIFO priority for the current thread.
 pub(super) fn set_realtime_priority(priority: i32) -> anyhow::Result<()> {
     // SAFETY: pid 0 = current thread; sched_param is properly initialized
-    let param = libc::sched_param {
-        sched_priority: priority,
-    };
+    let param = sched_param_with_priority(priority);
     let result = unsafe { libc::sched_setscheduler(0, libc::SCHED_FIFO, &param) };
 
     if result == 0 {
@@ -159,7 +175,7 @@ pub(super) fn has_deadline_capability() -> bool {
     let result = unsafe { libc::syscall(SYS_SCHED_SETATTR, 0i32, &attr as *const _, 0u32) };
     if result == 0 {
         // Unexpectedly succeeded — restore to SCHED_OTHER
-        let normal = libc::sched_param { sched_priority: 0 };
+        let normal = sched_param_with_priority(0);
         unsafe {
             libc::sched_setscheduler(0, libc::SCHED_OTHER, &normal);
         }
@@ -191,13 +207,13 @@ pub(super) fn lock_memory() -> anyhow::Result<()> {
 pub(super) fn can_set_rt_priority() -> bool {
     // Try to set a low RT priority — if it succeeds, we have permission.
     // Immediately restore to SCHED_OTHER afterward.
-    let param = libc::sched_param { sched_priority: 1 };
+    let param = sched_param_with_priority(1);
     // SAFETY: pid 0 = current thread; params are valid
     let result = unsafe { libc::sched_setscheduler(0, libc::SCHED_FIFO, &param) };
 
     if result == 0 {
         // Restore normal scheduling
-        let normal_param = libc::sched_param { sched_priority: 0 };
+        let normal_param = sched_param_with_priority(0);
         // SAFETY: restoring to SCHED_OTHER
         unsafe { libc::sched_setscheduler(0, libc::SCHED_OTHER, &normal_param) };
         true

@@ -217,7 +217,9 @@ jobs:
 
           # Assert files exist
           [ -f test_robot_rs/horus.toml ]  || { echo "FAIL: horus.toml not created"; exit 1; }
-          [ -f test_robot_rs/main.rs ]     || { echo "FAIL: main.rs not created"; exit 1; }
+          # `horus new -r` puts the entrypoint at src/main.rs (the Python
+          # template does use a root main.py). cargo_gen accepts either.
+          [ -f test_robot_rs/src/main.rs ] || { echo "FAIL: src/main.rs not created"; exit 1; }
           [ -f test_robot_rs/.gitignore ]  || { echo "FAIL: .gitignore not created"; exit 1; }
           [ -d test_robot_rs/.horus ]      || { echo "FAIL: .horus/ not created"; exit 1; }
 
@@ -227,8 +229,8 @@ jobs:
           grep -q 'version = '            test_robot_rs/horus.toml || { echo "FAIL: no version in horus.toml"; exit 1; }
 
           # Assert main.rs has Scheduler usage
-          grep -q "Scheduler::new" test_robot_rs/main.rs || { echo "FAIL: main.rs missing Scheduler"; exit 1; }
-          grep -q "Topic" test_robot_rs/main.rs || grep -q "node!" test_robot_rs/main.rs || { echo "FAIL: main.rs missing Topic or node! macro"; exit 1; }
+          grep -q "Scheduler::new" test_robot_rs/src/main.rs || { echo "FAIL: src/main.rs missing Scheduler"; exit 1; }
+          grep -q "Topic" test_robot_rs/src/main.rs || grep -q "node!" test_robot_rs/src/main.rs || { echo "FAIL: src/main.rs missing Topic or node! macro"; exit 1; }
 
           echo "PASS: Rust project created with correct structure"
           rm -rf test_robot_rs
@@ -265,7 +267,7 @@ jobs:
           $GITHUB_WORKSPACE/$HORUS new test_robot_macro -r -m 2>&1
 
           # Assert main.rs uses node! macro
-          grep -q "node!" test_robot_macro/main.rs || { echo "FAIL: macro project missing node! macro"; exit 1; }
+          grep -q "node!" test_robot_macro/src/main.rs || { echo "FAIL: macro project missing node! macro"; exit 1; }
           grep -q "horus_macros" test_robot_macro/horus.toml || { echo "FAIL: horus.toml missing horus_macros dep"; exit 1; }
 
           echo "PASS: macro project created correctly"

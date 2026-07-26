@@ -143,7 +143,21 @@ fn test_open_private_creates_writable_file() {
 #[test]
 fn test_dev_null_exists() {
     let path = fs::dev_null();
-    assert!(path.exists(), "dev_null path must exist on all platforms");
+
+    // `Path::exists()` is the wrong question on Windows. There, dev_null() is
+    // `NUL`, a DOS device name rather than a filesystem entry — `exists()`
+    // calls `metadata()`, which fails for devices, so it reports false even
+    // though the device is perfectly usable. The portable property is that the
+    // null device can be opened; assert that on Windows and keep the stricter
+    // path check on Unix, where /dev/null really is a filesystem node.
+    #[cfg(unix)]
+    assert!(path.exists(), "dev_null path must exist on Unix");
+
+    #[cfg(windows)]
+    assert!(
+        std::fs::OpenOptions::new().write(true).open(path).is_ok(),
+        "dev_null must be openable on Windows (NUL is a device, not a file)"
+    );
 }
 
 #[test]

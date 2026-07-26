@@ -197,11 +197,15 @@ jobs:
       - name: Check horus_core (macOS target)
         run: cargo check --no-default-features --target x86_64-apple-darwin -p horus_core
 
-      - name: Check horus_manager (Windows target)
-        run: cargo check --no-default-features --target x86_64-pc-windows-msvc -p horus_manager
-
-      - name: Check horus_manager (macOS target)
-        run: cargo check --no-default-features --target x86_64-apple-darwin -p horus_manager
+      # horus_manager is deliberately not cross-checked from this Linux runner.
+      # It pulls tree-sitter and tree-sitter-cpp, whose build scripts compile C
+      # and bail with "GNU compiler is not supported for this target" without an
+      # MSVC toolchain / macOS SDK present. horus_sys and horus_core above are
+      # pure Rust and do cross-check cleanly.
+      #
+      # horus_manager is still covered on both platforms natively: the CLI
+      # Parity matrix below builds the horus CLI on windows-latest and
+      # macos-latest, and multi-platform.yml builds the workspace there.
 
   # ─── CLI Workflow Parity ────────────────────────────────────────────────
 

@@ -82,10 +82,14 @@ echo "── Step 5: Project lifecycle ──"
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Try -r flag (Rust project)
-if $HORUS new "$TMPDIR/my_robot" -r 2>/dev/null; then
+# `horus new` takes a project NAME, not a path — it rejects anything that does
+# not start with a letter or underscore ("must start with a letter or
+# underscore"), so passing "$TMPDIR/my_robot" always failed. Create it from
+# inside the temp dir instead, in a subshell so the trap-based cleanup and the
+# checks below still see $TMPDIR.
+if (cd "$TMPDIR" && $HORUS new my_robot -r) 2>/dev/null; then
     pass "horus new -r creates project"
-elif $HORUS new "$TMPDIR/my_robot" 2>/dev/null; then
+elif (cd "$TMPDIR" && $HORUS new my_robot) 2>/dev/null; then
     pass "horus new creates project (default lang)"
 else
     fail "horus new failed"

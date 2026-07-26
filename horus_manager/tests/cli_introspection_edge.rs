@@ -17,12 +17,25 @@ fn horus_cmd() -> Command {
     cargo_bin_cmd!("horus")
 }
 
+/// Where `horus msg` looks for message definitions under a `HORUS_SOURCE_DIR`
+/// root.
+///
+/// This was `horus_library/messages` until horus_library was decomposed into
+/// horus_types + horus-tf + horus-robotics; `horus msg` now scans
+/// `horus_types/src` (commit 0a186a61). These tests kept building the old
+/// layout, so `HORUS_SOURCE_DIR` never matched, the command silently fell
+/// through to the real checkout, and every assertion counted the repo's own
+/// 25 types instead of the synthetic ones.
+fn temp_messages_dir(root: &std::path::Path) -> std::path::PathBuf {
+    root.join("horus_types").join("src")
+}
+
 /// Create a minimal temp messages directory with a given set of `.rs` source
 /// files.  Returns the `TempDir` guard (must be kept alive) and the root path
 /// to use for `HORUS_SOURCE_DIR`.
 fn setup_temp_messages(files: &[(&str, &str)]) -> (TempDir, String) {
     let tmp = TempDir::new().expect("failed to create temp dir");
-    let msgs_dir = tmp.path().join("horus_library").join("messages");
+    let msgs_dir = temp_messages_dir(tmp.path());
     fs::create_dir_all(&msgs_dir).expect("failed to create messages dir");
 
     for (name, content) in files {
@@ -820,7 +833,7 @@ fn test_msg_list_ignores_non_rs_files() {
     let (_tmp, root) = setup_temp_messages(&files);
 
     // Add a non-.rs file manually
-    let msgs_dir = _tmp.path().join("horus_library").join("messages");
+    let msgs_dir = temp_messages_dir(_tmp.path());
     fs::write(msgs_dir.join("readme.txt"), "not a source file").unwrap();
     fs::write(msgs_dir.join("data.json"), r#"{"key": "value"}"#).unwrap();
 

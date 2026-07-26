@@ -32,7 +32,8 @@ fn unique_topic(base: &str) -> String {
 }
 
 fn shm_path_for(topic_name: &str) -> std::path::PathBuf {
-    shm_topics_dir().join(format!("horus_{topic_name}"))
+    // No `horus_` prefix — see the note in cross_process.rs::shm_path.
+    shm_topics_dir().join(topic_name)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

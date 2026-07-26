@@ -37,7 +37,10 @@ fn peer_binary() -> PathBuf {
 }
 
 fn shm_path(name: &str) -> PathBuf {
-    shm_topics_dir().join(format!("horus_{name}"))
+    // The backing file is named after the topic with no prefix — the old
+    // `horus_` prefix went away with the SHM-only rework. horus_core's own
+    // tests use `shm_topics_dir().join(&name)`; match them.
+    shm_topics_dir().join(name)
 }
 
 /// Run a cross-process write+read test for a given message type.

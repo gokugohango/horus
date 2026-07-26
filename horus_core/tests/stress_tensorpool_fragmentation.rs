@@ -81,14 +81,25 @@ impl CycleStats {
 
 /// Sustained alloc/free cycles across multiple pool lifecycles.
 ///
-/// Since the bump allocator never reclaims data space, a single pool has a
-/// finite number of successful allocs. This test creates multiple pools over
-/// 60 seconds, running each to exhaustion and measuring consistency.
+/// Creates a fresh pool per cycle over 60 seconds and hammers it with
+/// alloc/free churn, checking that allocation latency stays consistent as
+/// pools are created and destroyed repeatedly.
+///
+/// Each cycle is time-boxed. The loop used to end only on data-region
+/// exhaustion, which was sound when the pool was a pure bump allocator that
+/// never reclaimed space. Now that `release` returns space to the pool, this
+/// workload holds ~16-32 tensors live and never exhausts — so exhaustion
+/// alone is not a termination condition and the test ran forever (it is what
+/// pinned the CI `Test` and MSRV jobs at the 6-hour ceiling). Exhaustion is
+/// still honoured as an early exit for configurations that do hit it.
 #[test]
 fn stress_tensorpool_repeated_lifecycle_60s() {
     let _shm_guard = cleanup_stale_shm();
 
     let test_duration = Duration::from_secs(60);
+    // Time-box each cycle so the 60s budget yields several lifecycles
+    // (the assertions below want at least 3).
+    let cycle_budget = Duration::from_secs(5);
     let start = Instant::now();
     let mut cycle = 0;
     let mut all_stats: Vec<CycleStats> = Vec::new();
@@ -119,9 +130,15 @@ fn stress_tensorpool_repeated_lifecycle_60s() {
         let mut rng = FastRng::new(42 + cycle as u64);
         let mut live_tensors = Vec::with_capacity(128);
 
-        // Run alloc/free until data region exhausts
+        // Run alloc/free until this cycle's time slice is up (or, for pools
+        // that can exhaust, until the data region is spent).
+        let cycle_start = Instant::now();
         let mut consecutive_failures = 0;
         loop {
+            if cycle_start.elapsed() >= cycle_budget {
+                break;
+            }
+
             // Maintain ~16-32 live tensors
             let fill = live_tensors.len();
             let should_free = fill > 0 && (fill > 32 || rng.range(0, 100) < 50);

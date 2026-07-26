@@ -1085,7 +1085,7 @@ mod tests {
     #[test]
     fn save_and_load_auth_config_roundtrip() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         let result = save_auth_config(
             "horus_key_test123",
@@ -1105,7 +1105,7 @@ mod tests {
     #[test]
     fn save_auth_config_without_username() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         let result = save_auth_config("horus_key_nouser", "https://registry.example.com", None);
         result.unwrap();
@@ -1136,7 +1136,7 @@ mod tests {
     #[test]
     fn save_auth_config_overwrites_existing() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         // Write first config
         save_auth_config("horus_key_first", "https://first.com", Some("user1")).unwrap();
@@ -1175,7 +1175,7 @@ mod tests {
     #[test]
     fn load_auth_config_returns_error_when_not_authenticated() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         // Create .horus dir but no auth.json
 
@@ -1345,7 +1345,7 @@ mod tests {
     #[test]
     fn logout_succeeds_when_not_logged_in() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         // No auth.json exists
 
@@ -1359,7 +1359,7 @@ mod tests {
     #[test]
     fn logout_then_load_auth_fails() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         save_auth_config("horus_key_then_logout", "https://example.com", None).unwrap();
 
@@ -1416,7 +1416,7 @@ mod tests {
     #[test]
     fn save_auth_config_with_very_long_api_key() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         let long_key = format!("horus_key_{}", "x".repeat(2048));
         save_auth_config(&long_key, "https://example.com", None).unwrap();
@@ -1428,7 +1428,7 @@ mod tests {
     #[test]
     fn save_auth_config_with_url_containing_path() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         let url_with_path = "https://registry.example.com/api/v2";
         save_auth_config("horus_key_path", url_with_path, None).unwrap();
@@ -1440,7 +1440,7 @@ mod tests {
     #[test]
     fn save_auth_config_with_localhost_url() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         save_auth_config("horus_key_local", "http://localhost:3000", Some("dev")).unwrap();
 
@@ -1451,7 +1451,7 @@ mod tests {
     #[test]
     fn save_auth_config_with_unicode_username() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         save_auth_config(
             "horus_key_uni",
@@ -1472,7 +1472,7 @@ mod tests {
     #[test]
     fn multiple_saves_last_write_wins() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         for i in 0..10 {
             save_auth_config(
@@ -1493,7 +1493,7 @@ mod tests {
     #[test]
     fn whoami_not_logged_in_succeeds() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         // whoami should not error when not logged in, just print guidance
         let result = whoami();
@@ -1505,7 +1505,7 @@ mod tests {
     #[test]
     fn keys_list_not_logged_in_succeeds() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         let result = keys_list();
         result.unwrap();
@@ -1516,7 +1516,7 @@ mod tests {
     #[test]
     fn keys_revoke_not_logged_in_succeeds() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         let result = keys_revoke("some-key-id");
         result.unwrap();
@@ -1527,7 +1527,7 @@ mod tests {
     #[test]
     fn full_save_load_logout_cycle() {
         let _guard = crate::CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = ConfigHomeGuard::new();
+        let _tmp = ConfigHomeGuard::new();
 
         // Step 1: save
         save_auth_config("horus_key_cycle", "https://cycle.test", Some("cyclist")).unwrap();

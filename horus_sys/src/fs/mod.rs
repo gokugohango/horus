@@ -652,7 +652,20 @@ mod tests {
     #[test]
     fn dev_null_path_exists() {
         let path = dev_null();
-        assert!(path.exists(), "dev_null path should exist");
+
+        // On Windows dev_null() is `NUL`, a DOS device name rather than a
+        // filesystem entry: Path::exists() calls metadata(), which fails for
+        // devices, so it reports false even though the device opens fine. The
+        // portable guarantee is that it is usable, not that it is stat-able.
+        // (Same reasoning as parity_fs::test_dev_null_exists.)
+        #[cfg(unix)]
+        assert!(path.exists(), "dev_null path should exist on Unix");
+
+        #[cfg(windows)]
+        assert!(
+            std::fs::OpenOptions::new().write(true).open(path).is_ok(),
+            "dev_null must be openable on Windows (NUL is a device, not a file)"
+        );
     }
 
     // ── FileLock shared test ────────────────────────────────────────

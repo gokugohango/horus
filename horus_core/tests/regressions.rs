@@ -160,8 +160,8 @@ fn regression_serde_topic_no_data_loss_on_wrap() {
 // 2. Migration system regressions
 // ============================================================================
 
-/// Regression: Topic must survive automatic backend migration triggered by
-/// cross-thread usage.
+/// Regression: a second handle attaching to a live topic must not break
+/// delivery.
 ///
 /// Original issue: Stale (mode, cached_epoch) pair after concurrent migration
 /// Root cause: Thread A loads epoch E, enters migration check, then thread B
@@ -169,49 +169,51 @@ fn regression_serde_topic_no_data_loss_on_wrap() {
 ///   reads the OLD mode from cache, leaving an inconsistent state.
 /// Fix: After sync_local, re-load the epoch and loop if it changed. This
 ///   ensures the cached mode always matches the actual epoch.
+///
+/// Reworked for SHM-only: the original body opened a handle that both produced
+/// and consumed, then attached a second handle and required that *something*
+/// arrive on either one. Two handles both consuming breaks the SPSC contract
+/// ("Topic = single-thread contract"), and since every topic is now SHM-backed
+/// from the first send there is no same-thread → cross-thread migration left
+/// for it to observe: both handles report SpscShm throughout, so the test had
+/// stopped exercising its own premise and only asserted undefined behaviour.
+///
+/// What is still worth pinning is the delivery invariant: opening an extra
+/// handle on a live topic must not lose messages for the real consumer.
 #[test]
 fn regression_data_survives_automatic_backend_migration() {
     let name = common::unique("reg_auto_mig");
 
-    // Start with a same-thread topic
-    let t1: Topic<u64> = Topic::new(&name).unwrap();
-    t1.send(1u64);
-    assert_eq!(t1.recv(), Some(1u64), "Same-thread send/recv must work");
+    // Producer and consumer as distinct handles — the supported SPSC shape.
+    let tx: Topic<u64> = Topic::new(&name).unwrap();
+    let rx: Topic<u64> = Topic::new(&name).unwrap();
 
-    let initial_backend = t1.backend_name();
+    tx.send(1u64);
+    assert_eq!(rx.recv(), Some(1u64), "send/recv across handles must work");
 
-    // Create a second handle — this may trigger migration
-    let t2: Topic<u64> = Topic::new(&name).unwrap();
+    // Attaching a third handle must not disturb the established pair.
+    let _observer: Topic<u64> = Topic::new(&name).unwrap();
 
-    // Both handles must still be functional after migration
-    t1.send(42u64);
-    let val = t2.try_recv();
-    // If migration happened, recv on t2 should work. If not, t1 recv works.
-    if val.is_none() {
-        // t2 might not have migrated yet, try on t1
-        let _ = t1.recv();
-    }
-
-    // Verify data integrity with multiple messages
     for i in 100..110u64 {
-        t1.send(i);
+        tx.send(i);
     }
 
     let mut received = Vec::new();
     for _ in 0..20 {
-        if let Some(v) = t2.try_recv() {
-            received.push(v);
-        }
-        if let Some(v) = t1.try_recv() {
+        if let Some(v) = rx.try_recv() {
             received.push(v);
         }
     }
 
-    let _ = initial_backend; // used for documentation purposes
-                             // At least some messages must have been delivered
-    assert!(
-        !received.is_empty(),
-        "Messages must be deliverable after backend migration"
+    assert_eq!(
+        received,
+        (100..110u64).collect::<Vec<_>>(),
+        "every message must still reach the consumer after another handle attaches"
+    );
+    assert_eq!(
+        tx.backend_name(),
+        rx.backend_name(),
+        "both handles must agree on the backend (the cached-mode/epoch invariant)"
     );
 }
 

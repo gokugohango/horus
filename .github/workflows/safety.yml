@@ -106,7 +106,10 @@ jobs:
 
       - name: Run Tests with AddressSanitizer
         run: |
-          cargo +nightly test --workspace --lib -Zbuild-std --target x86_64-unknown-linux-gnu
+          # horus_py is excluded for the same reason ci.yml excludes it: its
+          # default pyo3 `extension-module` feature leaves the Python symbols
+          # undefined, so the test binary cannot link (`linking with cc failed`).
+          cargo +nightly test --workspace --exclude horus_py --lib -Zbuild-std --target x86_64-unknown-linux-gnu
         env:
           RUSTFLAGS: -Zsanitizer=address
           RUSTDOCFLAGS: -Zsanitizer=address
@@ -138,7 +141,9 @@ jobs:
 
       - name: Run Concurrent Tests with ThreadSanitizer
         run: |
-          cargo +nightly test --workspace --lib -Zbuild-std --target x86_64-unknown-linux-gnu -- --test-threads=1
+          # See the ASan job: horus_py's pyo3 extension-module feature makes the
+          # test binary unlinkable.
+          cargo +nightly test --workspace --exclude horus_py --lib -Zbuild-std --target x86_64-unknown-linux-gnu -- --test-threads=1
         env:
           RUSTFLAGS: -Zsanitizer=thread
           TSAN_OPTIONS: second_deadlock_stack=1

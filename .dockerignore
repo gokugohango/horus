@@ -1,0 +1,11 @@
+# Build context for tests/docker/Dockerfile.* — these images run
+# `cargo build` from scratch inside the container, so nothing here is needed
+# and copying it makes the context enormous (a local target/ can be tens of GB).
+target/
+**/target/
+.horus/
+**/.horus/
+.git/
+node_modules/
+**/node_modules/
+*.profraw

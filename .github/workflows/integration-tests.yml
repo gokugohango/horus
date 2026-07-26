@@ -273,7 +273,12 @@ jobs:
 
           # Assert main.rs uses node! macro
           grep -q "node!" test_robot_macro/src/main.rs || { echo "FAIL: macro project missing node! macro"; exit 1; }
-          grep -q "horus_macros" test_robot_macro/horus.toml || { echo "FAIL: horus.toml missing horus_macros dep"; exit 1; }
+          # horus_macros is not written into horus.toml — it is one of the
+          # implicit path deps cargo_gen injects into the generated
+          # .horus/Cargo.toml (same mechanism as the implicit serde entry), so
+          # it only exists after a build generates the build files.
+          (cd test_robot_macro && $GITHUB_WORKSPACE/$HORUS build >/dev/null 2>&1) || true
+          grep -q "horus_macros" test_robot_macro/.horus/Cargo.toml || { echo "FAIL: generated Cargo.toml missing horus_macros dep"; exit 1; }
 
           echo "PASS: macro project created correctly"
           rm -rf test_robot_macro

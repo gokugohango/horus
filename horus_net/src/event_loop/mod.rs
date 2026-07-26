@@ -1,4 +1,5 @@
-//! Event-driven I/O — epoll (Linux) + kqueue (macOS).
+//! Event-driven I/O — epoll (Linux) + kqueue (macOS). Unix-only: there is no
+//! Windows backend.
 //!
 //! No busy-polling. Zero wakeups when idle.
 
@@ -26,7 +27,13 @@ pub struct Event {
 }
 
 /// Platform-dispatched event loop.
-/// On Linux: epoll. On macOS: kqueue. On other: polling fallback.
+///
+/// Linux: epoll. macOS: kqueue. There is no other backend — this used to say
+/// "On other: polling fallback", but no fallback was ever written, so on any
+/// other target `PlatformEventLoop` simply does not exist and horus_net fails
+/// to compile (Windows also trips over the bare `libc::write` in
+/// replicator.rs). horus_net is Unix-only until an IOCP backend lands; the
+/// Windows job in multi-platform.yml excludes it for that reason.
 #[cfg(target_os = "linux")]
 pub type PlatformEventLoop = epoll::EpollLoop;
 

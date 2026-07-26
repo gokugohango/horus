@@ -127,11 +127,17 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      # horus_net is excluded: it has no Windows event loop. event_loop/mod.rs
+      # provides epoll (Linux) and kqueue (macOS) only — its doc comment claims
+      # a polling fallback for other platforms, but none was ever written, so
+      # PlatformEventLoop simply does not exist on Windows and replicator.rs
+      # also calls libc::write directly. Adding an IOCP backend is a feature,
+      # not a CI fix. Everything else in the workspace does build for Windows.
       - name: Check
-        run: cargo check --workspace --no-default-features
+        run: cargo check --workspace --exclude horus_net --no-default-features
 
       - name: Build (lib only)
-        run: cargo build --workspace --lib --no-default-features
+        run: cargo build --workspace --exclude horus_net --lib --no-default-features
 
       - name: Test (horus_sys + horus_core)
         run: |

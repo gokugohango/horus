@@ -299,7 +299,12 @@ impl RtConfig {
                 return Err(io::Error::last_os_error());
             }
 
-            let mut param = libc::sched_param { sched_priority: 0 };
+            // Zero-init rather than a struct literal: sched_param is not
+            // field-compatible across libcs — musl also carries the four POSIX
+            // sporadic-server fields, so naming only sched_priority is E0063
+            // there. sched_getparam overwrites it anyway. (Same reason as
+            // horus_sys::rt::linux::sched_param_with_priority.)
+            let mut param: libc::sched_param = std::mem::zeroed();
             if libc::sched_getparam(0, &mut param) < 0 {
                 return Err(io::Error::last_os_error());
             }

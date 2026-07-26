@@ -37,6 +37,20 @@ fn read_toml(proj: &std::path::Path) -> String {
     fs::read_to_string(proj.join("horus.toml")).unwrap()
 }
 
+/// Find a dependency entry inside a `[section]` of horus.toml.
+///
+/// `horus add` emits inline tables — `serde = { source = "crates.io", version = "*" }`
+/// — rather than `[dependencies.serde]` section headers, so tests must match on
+/// the key inside the section, not on a section header that is never written.
+fn dep_entry<'a>(toml: &'a str, section: &str, name: &str) -> Option<&'a str> {
+    let start = toml.find(&format!("[{section}]"))? + section.len() + 2;
+    let rest = &toml[start..];
+    let end = rest.find("\n[").map(|i| start + i).unwrap_or(toml.len());
+    toml[start..end]
+        .lines()
+        .find(|l| l.trim_start().starts_with(&format!("{name} =")))
+}
+
 /// Assert no panic in output.
 fn assert_no_panic(output: &std::process::Output, ctx: &str) {
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -60,8 +74,11 @@ fn test_add_crates_io_explicit() {
     assert!(output.status.success(), "add serde should succeed");
     let toml = read_toml(&proj);
     assert!(
-        toml.contains("[dependencies.serde]"),
-        "should have serde section"
+        // `horus add` writes an inline table (serde = { source = ..., version = ... })
+        // since the toml_edit comment-preserving rewrite; there is no
+        // [dependencies.serde] section header any more.
+        dep_entry(&toml, "dependencies", "serde").is_some(),
+        "should have a serde dependency entry"
     );
     assert!(
         toml.contains("source = \"crates.io\""),
@@ -126,7 +143,7 @@ fn test_add_crates_io_dev_dep() {
     assert!(output.status.success());
     let toml = read_toml(&proj);
     assert!(
-        toml.contains("[dev-dependencies.criterion]"),
+        dep_entry(&toml, "dev-dependencies", "criterion").is_some(),
         "should be in dev-dependencies, got:\n{}",
         toml
     );
@@ -149,7 +166,7 @@ fn test_add_pypi_in_python_project() {
     assert!(output.status.success());
     let toml = read_toml(&proj);
     assert!(
-        toml.contains("[dependencies.numpy]"),
+        dep_entry(&toml, "dependencies", "numpy").is_some(),
         "should have numpy section"
     );
     assert!(toml.contains("source = \"pypi\""), "source should be pypi");
@@ -597,13 +614,20 @@ fn test_remove_then_build_regenerates() {
         .output()
         .unwrap();
 
-    // .horus/Cargo.toml should no longer mention serde
+    // The user's serde pin should be gone. cargo_gen::write_implicit_deps
+    // always re-adds serde — message! and #[derive(Serialize)] expand to serde
+    // paths and need it as a direct dep — so the file still mentions serde;
+    // what must disappear is the version the user asked for.
     let cargo_toml = proj.join(".horus/Cargo.toml");
     if cargo_toml.exists() {
         let content = fs::read_to_string(&cargo_toml).unwrap();
         assert!(
-            !content.contains("serde"),
-            ".horus/Cargo.toml should not contain serde after remove + build"
+            !content.contains("serde = \"1.0\""),
+            "user-declared serde should be gone from .horus/Cargo.toml after remove + build"
+        );
+        assert!(
+            content.contains("serde = { version = \"1\", features = [\"derive\"] }"),
+            "implicit serde should be re-added by cargo_gen"
         );
     }
 }

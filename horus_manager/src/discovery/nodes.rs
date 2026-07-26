@@ -28,7 +28,10 @@ pub(super) fn discover_nodes_uncached() -> HorusResult<Vec<NodeStatus>> {
                     .and_then(|s| s.split(&[',', '}'][..]).next())
                 {
                     if let Ok(pid) = pid_str.trim().parse::<i32>() {
-                        if pid > 0 && unsafe { libc::kill(pid, 0) != 0 } {
+                        // horus_sys, not libc::kill — kill() does not exist on
+                        // Windows, and horus_sys::discover guards pid 0 and
+                        // pids above i32::MAX (which wrap to "all processes").
+                        if pid > 0 && !horus_sys::discover::is_process_alive(pid as u32) {
                             let _ = std::fs::remove_file(&path);
                         }
                     }
@@ -42,7 +45,7 @@ pub(super) fn discover_nodes_uncached() -> HorusResult<Vec<NodeStatus>> {
         .filter(|n| {
             // Filter out dead nodes — match ROS2 behavior (dead nodes simply vanish)
             if n.pid > 0 {
-                unsafe { libc::kill(n.pid as i32, 0) == 0 }
+                horus_sys::discover::is_process_alive(n.pid)
             } else {
                 false
             }

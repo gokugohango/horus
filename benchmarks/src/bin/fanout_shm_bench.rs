@@ -11,6 +11,7 @@ use horus_core::communication::Topic;
 
 const ITERATIONS: usize = 50_000;
 
+#[cfg(unix)]
 fn main() {
     // Clean stale SHM
     let _ = std::fs::remove_dir_all("/dev/shm/horus_default");
@@ -38,6 +39,7 @@ fn main() {
     bench_fanout_shm_mpmc(2, 2);
 }
 
+#[cfg(unix)]
 fn bench_fanout_shm_mpmc(num_pubs: usize, num_subs: usize) {
     // Fork subscriber children first so they're ready
     let mut sub_pids = Vec::new();
@@ -130,6 +132,7 @@ fn bench_fanout_shm_mpmc(num_pubs: usize, num_subs: usize) {
     }
 }
 
+#[cfg(unix)]
 fn bench_fanout_shm_spmc(num_pubs: usize, num_subs: usize) {
     // Fork subscriber children
     let mut child_pids = Vec::new();
@@ -180,4 +183,15 @@ fn bench_fanout_shm_spmc(num_pubs: usize, num_subs: usize) {
         elapsed.as_millis(),
         throughput / 1e6
     );
+}
+
+// This benchmark forks real child processes to exercise the SHM ring across
+// process boundaries; fork()/waitpid() have no Windows equivalent, and the
+// paths are /dev/shm-specific. Cargo cannot cfg out a [[bin]] target, so the
+// binary still builds on Windows — it just reports that it cannot run. Without
+// this, `cargo check --workspace` on windows-latest failed with five
+// "cannot find function `fork`/`waitpid` in crate `libc`" errors.
+#[cfg(not(unix))]
+fn main() {
+    eprintln!("fanout_shm_bench requires fork()/waitpid() and /dev/shm — Unix only.");
 }

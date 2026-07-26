@@ -4,7 +4,7 @@
 # Tiers:
 #   - Unit tests: Run on every PR (fast, no SHM needed for most)
 #   - UAT integration tests: Run on PR + merge to main
-#   - Stress & chaos tests: Manual dispatch only (slow, resource-intensive)
+#   - Stress tests: Manual dispatch only (slow, resource-intensive)
 
 name: Monitor Tests
 
@@ -88,8 +88,14 @@ jobs:
       - name: Run unit tests (lib)
         run: cargo test -p horus_manager --lib -- --test-threads=1
 
-      - name: Run monitor_tests integration
-        run: cargo test -p horus_manager --test monitor_tests -- --test-threads=1
+      # `--test monitor_tests` named a target that has never existed on main
+      # (`git log --all -- horus_manager/tests/monitor_tests.rs` is empty), so
+      # this step could not have passed since the workflow was added in
+      # 243281e9. It went unnoticed because the lib step above it was failing
+      # first. `harness_tests` is the real target exercising the monitor
+      # harness — node discovery, topic creation, blackbox injection.
+      - name: Run harness integration tests
+        run: cargo test -p horus_manager --test harness_tests -- --test-threads=1
 
   # ─────────────────────────────────────────────────────────────────────────────
   #  UAT Integration Tests — every PR + merge
@@ -133,26 +139,16 @@ jobs:
           mkdir -p "$SHM_DIR"/{topics/horus_topic,nodes,control,network,scheduler}
           chmod -R 700 "$SHM_DIR"
 
-      - name: UAT — Node Discovery
-        run: cargo test -p horus_manager --test uat_node_discovery -- --test-threads=1
-
-      - name: UAT — Topic Monitoring
-        run: cargo test -p horus_manager --test uat_topic_monitoring -- --test-threads=1
-
-      - name: UAT — Parameter Management
-        run: cargo test -p horus_manager --test uat_parameter_management -- --test-threads=1
-
-      - name: UAT — Recording & Debug
-        run: cargo test -p horus_manager --test uat_recording_debug -- --test-threads=1
-
-      - name: UAT — WebSocket Live Updates
-        run: cargo test -p horus_manager --test uat_websocket_live -- --test-threads=1
-
-      - name: UAT — Auth Flow
-        run: cargo test -p horus_manager --test uat_auth_flow -- --test-threads=1
+      # These six named uat_node_discovery / uat_topic_monitoring /
+      # uat_parameter_management / uat_recording_debug / uat_websocket_live /
+      # uat_auth_flow. None of them exist on main — the UAT suites were
+      # consolidated into a single `uat_workflows` target. Like the step above,
+      # they were never reached because the unit-test job failed first.
+      - name: UAT — end-to-end workflows
+        run: cargo test -p horus_manager --test uat_workflows -- --test-threads=1
 
   # ─────────────────────────────────────────────────────────────────────────────
-  #  Stress & Chaos Tests — manual dispatch only
+  #  Stress Tests — manual dispatch only
   # ─────────────────────────────────────────────────────────────────────────────
   stress-tests:
     name: Stress Tests
@@ -185,67 +181,30 @@ jobs:
           mkdir -p "$SHM_DIR"/{topics/horus_topic,nodes,control,network,scheduler}
           chmod -R 700 "$SHM_DIR"
 
-      - name: Stress — Scale (1000 nodes)
-        run: cargo test -p horus_manager --test stress_scale -- --test-threads=1
+      # stress_scale / stress_churn do not exist on main. `discovery_stress` is
+      # the real stress target in this crate. NOTE: it currently has known
+      # failing tests (presence cleanup on drop, and clean_shm() in the first
+      # test leaving the rest with 0 nodes) — pre-existing, tracked separately.
+      - name: Stress — node discovery under load
+        run: cargo test -p horus_manager --test discovery_stress -- --test-threads=1
         timeout-minutes: 10
 
-      - name: Stress — Churn (rapid lifecycle)
-        run: cargo test -p horus_manager --test stress_churn -- --test-threads=1
-        timeout-minutes: 10
+  # The Chaos Tests job was removed: it ran `--test chaos_failure` and
+  # `--test chaos_concurrent`, neither of which has ever existed on main, so
+  # it could only ever fail. There is no chaos/fault-injection target in
+  # horus_manager to point it at.
 
-  chaos-tests:
-    name: Chaos Tests
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libudev-dev pkg-config
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Clean build
-        run: cargo clean
-
-      - name: Setup SHM directories
-        run: |
-          # Create namespaced SHM directory structure
-          SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          # No sudo: sudo mkdir leaves these root-owned, which is what made
-          # SchedulerRegistry::open and the presence writer fail with
-          # PermissionDenied. Create them as the runner and keep 0700 —
-          # regression_shm_topics_dir_permissions_restricted asserts the topics
-          # dir is owner-only, so chmod 777 here would break that guarantee.
-          mkdir -p "$SHM_DIR"/{topics/horus_topic,nodes,control,network,scheduler}
-          chmod -R 700 "$SHM_DIR"
-
-      - name: Chaos — Failure injection
-        run: cargo test -p horus_manager --test chaos_failure -- --test-threads=1
-        timeout-minutes: 5
-
-      - name: Chaos — Concurrent abuse
-        run: cargo test -p horus_manager --test chaos_concurrent -- --test-threads=1
-        timeout-minutes: 5
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  #  Final status gate
-  # ─────────────────────────────────────────────────────────────────────────────
   monitor-tests-success:
     name: Monitor Tests Success
     runs-on: ubuntu-latest
     if: always()
-    needs: [unit-tests, uat-tests, stress-tests, chaos-tests]
+    needs: [unit-tests, uat-tests, stress-tests]
     steps:
       - name: Check results
         run: |
           echo "unit-tests: ${{ needs.unit-tests.result }}"
           echo "uat-tests: ${{ needs.uat-tests.result }}"
           echo "stress-tests: ${{ needs.stress-tests.result }}"
-          echo "chaos-tests: ${{ needs.chaos-tests.result }}"
 
           # Unit and UAT must pass (always run)
           if [[ "${{ needs.unit-tests.result }}" != "success" ]]; then
@@ -257,13 +216,9 @@ jobs:
             exit 1
           fi
 
-          # Stress/chaos only run on manual dispatch — skip check if skipped
+          # Stress only runs on manual dispatch — skip check if skipped
           if [[ "${{ needs.stress-tests.result }}" == "failure" ]]; then
             echo "Stress tests failed!"
-            exit 1
-          fi
-          if [[ "${{ needs.chaos-tests.result }}" == "failure" ]]; then
-            echo "Chaos tests failed!"
             exit 1
           fi
 

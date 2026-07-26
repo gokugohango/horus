@@ -250,9 +250,15 @@ fn uat_project_health_workflow() {
         .unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(!stderr.contains("panicked"), "doctor should not panic");
-    assert!(
-        output.status.success(),
-        "doctor should succeed in a valid project"
+    // `horus doctor` uses three exit codes deliberately: 2 = hard failures,
+    // 1 = warnings only, 0 = all clear. A machine without a PREEMPT_RT kernel
+    // always warns ("Standard kernel, jitter ±100μs"), so requiring exit 0 here
+    // could never pass on an ordinary box or a CI runner. What a valid project
+    // must guarantee is the absence of *failures*.
+    assert_ne!(
+        output.status.code(),
+        Some(2),
+        "doctor should report no failures in a valid project"
     );
 
     // 4. Check --full (comprehensive validation)

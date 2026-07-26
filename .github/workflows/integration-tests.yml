@@ -56,8 +56,13 @@ jobs:
         run: |
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
+          chmod -R 700 "$SHM_DIR"
           # Increase shared memory limits
           sudo sysctl -w kernel.shmmax=2147483648
           sudo sysctl -w kernel.shmall=2147483648
@@ -119,8 +124,13 @@ jobs:
         run: |
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build horus_manager
         run: cargo build -p horus_manager --release
@@ -474,8 +484,10 @@ jobs:
         run: |
           # Create test SHM data
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          sudo mkdir -p "$SHM_DIR/topics/test_clean_topic"
-          echo "test" | sudo tee "$SHM_DIR/topics/test_clean_topic/data" > /dev/null
+          # Unprivileged: `horus clean --shm` runs as the runner, so a
+          # root-owned fixture is one it could never remove.
+          mkdir -p "$SHM_DIR/topics/test_clean_topic"
+          echo "test" > "$SHM_DIR/topics/test_clean_topic/data"
 
           output=$($HORUS clean --shm 2>&1) || true
           echo "$output"
@@ -488,8 +500,13 @@ jobs:
 
           # Recreate SHM dirs for subsequent tests
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
+          chmod -R 700 "$SHM_DIR"
 
       # ─────────────────────────────────────────────────
       # 10. horus record — recording management
@@ -742,8 +759,13 @@ jobs:
         run: |
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build Workspace
         run: cargo build --workspace --release

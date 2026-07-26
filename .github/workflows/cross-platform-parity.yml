@@ -52,8 +52,11 @@ jobs:
 
       - name: Setup SHM directories
         run: |
-          sudo mkdir -p /dev/shm/horus_ci
-          sudo chmod 777 /dev/shm/horus_ci
+          # No sudo — see the note in ci.yml. A root-owned 0777 dir both breaks
+          # the writers and contradicts the owner-only permission the SHM
+          # regression tests assert.
+          mkdir -p /dev/shm/horus_ci
+          chmod 700 /dev/shm/horus_ci
 
       - name: Run parity tests (horus_sys)
         run: |

@@ -218,8 +218,13 @@ jobs:
         run: |
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Check MSRV Compatibility
         run: cargo check --workspace

@@ -63,8 +63,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_cpp_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Run Rust FFI Tests
         run: |
@@ -118,8 +123,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_cpp_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build libhorus_cpp
         run: cargo build --no-default-features -p horus_cpp
@@ -177,8 +187,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_cpp_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build and compile
         run: |
@@ -291,8 +306,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_xlang_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build C++ lib and binaries
         run: |
@@ -336,8 +356,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_asan_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build libhorus_cpp
         run: cargo build --no-default-features -p horus_cpp
@@ -389,8 +414,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_tsan_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build libhorus_cpp with TSan
         run: |
@@ -448,8 +478,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_ubsan_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build libhorus_cpp with UBSan
         run: |
@@ -507,8 +542,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_vg_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build libhorus_cpp (debug)
         run: cargo build --no-default-features -p horus_cpp
@@ -558,8 +598,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_fuzz_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build fuzz targets
         working-directory: horus_cpp
@@ -619,8 +664,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_cov_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Run Rust coverage
         run: |
@@ -711,8 +761,13 @@ jobs:
       - name: Setup Shared Memory
         run: |
           SHM_DIR="/dev/shm/horus_ci_bench_${GITHUB_RUN_ID}"
-          sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
-          sudo chmod -R 777 "$SHM_DIR"
+          # No sudo: sudo mkdir leaves these root-owned, which is what made
+          # SchedulerRegistry::open and the presence writer fail with
+          # PermissionDenied. Create them as the runner and keep 0700 —
+          # regression_shm_topics_dir_permissions_restricted asserts the topics
+          # dir is owner-only, so chmod 777 here would break that guarantee.
+          mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler,tensors}
+          chmod -R 700 "$SHM_DIR"
 
       - name: Build release
         run: cargo build --no-default-features -p horus_cpp --release

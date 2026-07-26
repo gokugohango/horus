@@ -57,22 +57,27 @@ jobs:
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
           sudo chmod -R 777 "$SHM_DIR"
 
-      # Run MIRI on core modules with unsafe code
-      - name: MIRI - horus_core memory module (unit tests)
+      # Run MIRI on the unsafe code it can actually execute.
+      #
+      # Miri cannot run anything that touches a file-backed mmap
+      # ("unsupported operation: Miri does not support file-backed memory
+      # mappings", raised from memmap2). Since the transport went SHM-only that
+      # rules out most of horus_core: every Topic, the TensorPool, and therefore
+      # every pool-backed type (tensor_handle, backend, tensor_pool, image,
+      # pointcloud, depth_image, costmap, occupancy_grid). Each of the three
+      # steps that used to live here died on the first such test, so this job
+      # has never actually reported a UB result.
+      #
+      # What remains is the unsafe code Miri *can* execute: the SIMD copy
+      # helpers, the RT allocator guard, and the SHM path helpers. Verified
+      # locally under the same MIRIFLAGS.
+      #
+      # The mmap-backed paths are not left uncovered — ASan, TSan and the
+      # valgrind job in cpp-bindings.yml exercise them on real memory.
+      - name: MIRI - horus_core unsafe primitives (unit tests)
         run: |
-          cargo miri test -p horus_core --lib -- memory::
-        env:
-          MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-permissive-provenance
-
-      - name: MIRI - horus_core memory safety integration tests
-        run: |
-          cargo miri test -p horus_core --test memory_safety
-        env:
-          MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-permissive-provenance
-
-      - name: MIRI - horus_core communication module
-        run: |
-          cargo miri test -p horus_core --lib -- communication::
+          cargo miri test -p horus_core --lib -- \
+            memory::simd memory::rt_allocator memory::platform
         env:
           MIRIFLAGS: -Zmiri-disable-isolation -Zmiri-permissive-provenance
 

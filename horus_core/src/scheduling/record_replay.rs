@@ -892,7 +892,7 @@ impl NodeReplayer {
 ///
 /// Results are deduplicated so a session that exists in both locations
 /// appears only once (the platform directory takes precedence for path
-/// resolution in [`session_recordings`] and [`delete_session`]).
+/// resolution in [`RecordingManager::session_recordings`] and [`RecordingManager::delete_session`]).
 pub struct RecordingManager {
     /// Primary search directory (platform data dir).
     base_dir: PathBuf,

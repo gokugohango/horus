@@ -228,7 +228,7 @@ macro_rules! hlog {
     };
 }
 
-/// Log a [`HorusError`] with its remediation hint (if any).
+/// Log an [`Error`](crate::error::Error) with its remediation hint (if any).
 ///
 /// Logs the error at ERROR level, then appends the `help()` hint on a
 /// second line if one exists. Use this instead of `hlog!(error, "{}", e)`

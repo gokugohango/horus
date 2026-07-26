@@ -306,8 +306,8 @@ fn find_cpp_binary(build_dir: &Path, project_name: &str) -> Result<PathBuf> {
     // Common locations where cmake puts binaries
     let candidates = [
         build_dir.join(&target_name),
-        build_dir.join(format!("{}/{}", "Debug", &target_name)),
-        build_dir.join(format!("{}/{}", "Release", &target_name)),
+        build_dir.join(format!("{}/{}", "Debug", target_name)),
+        build_dir.join(format!("{}/{}", "Release", target_name)),
     ];
 
     for candidate in &candidates {

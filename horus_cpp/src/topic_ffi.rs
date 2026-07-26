@@ -1,13 +1,13 @@
-//! FFI wrappers for Topic<T> publishing and subscribing.
+//! FFI wrappers for `Topic<T>` publishing and subscribing.
 //!
 //! ## Design
 //!
 //! For POD message types, the FFI uses typed wrappers per message type.
 //! Each concrete type gets its own FFI functions:
 //!   - `publisher_cmd_vel_new(name)` → `Box<FfiPublisher<CmdVel>>`
-//!   - `publisher_cmd_vel_send(pub, msg)` → sends via Topic<CmdVel>
+//!   - `publisher_cmd_vel_send(pub, msg)` → sends via `Topic<CmdVel>`
 //!   - `subscriber_cmd_vel_new(name)` → `Box<FfiSubscriber<CmdVel>>`
-//!   - `subscriber_cmd_vel_recv(sub)` → Option<CmdVel>
+//!   - `subscriber_cmd_vel_recv(sub)` → `Option<CmdVel>`
 //!
 //! This monomorphized approach avoids generic FFI (which CXX can't handle)
 //! while maintaining type safety and zero-copy for POD messages.
@@ -16,7 +16,7 @@ use horus_core::communication::Topic;
 
 // ─── Opaque Publisher Wrapper ────────────────────────────────────────────────
 
-/// FFI-safe publisher wrapping a horus_core Topic<T>.
+/// FFI-safe publisher wrapping a horus_core `Topic<T>`.
 ///
 /// One instance per (topic_name, message_type) pair.
 /// Thread-local — must be used from the thread that created it.
@@ -24,7 +24,7 @@ pub struct FfiPublisher<T: horus_core::communication::TopicMessage> {
     topic: Topic<T>,
 }
 
-/// FFI-safe subscriber wrapping a horus_core Topic<T>.
+/// FFI-safe subscriber wrapping a horus_core `Topic<T>`.
 pub struct FfiSubscriber<T: horus_core::communication::TopicMessage> {
     topic: Topic<T>,
 }

@@ -20,7 +20,7 @@ use thiserror::Error;
 
 /// Defines a request/response service.
 ///
-/// Use the [`service!`] macro to define services declaratively rather than
+/// Use the [`service!`](crate::service) macro to define services declaratively rather than
 /// implementing this trait manually.
 ///
 /// ```rust,ignore

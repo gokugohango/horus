@@ -1,7 +1,7 @@
 //! Hardware configuration and node loading from `horus.toml`.
 //!
 //! Provides [`NodeParams`] for typed config access, a node registry
-//! ([`register!`](register_driver!) macro), and [`load()`] / [`load_from()`]
+//! ([`register_driver!`](crate::register_driver) macro), and [`load()`] / [`load_from()`]
 //! to create nodes from the `[hardware]` config section.
 //!
 //! Users access this via `horus::hardware`.

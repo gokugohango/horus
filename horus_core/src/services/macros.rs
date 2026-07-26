@@ -1,6 +1,6 @@
 //! Macro for defining HORUS service types.
 //!
-//! The [`service!`] macro provides a declarative way to define service types
+//! The [`service!`](crate::service) macro provides a declarative way to define service types
 //! with their Request and Response types.
 //!
 //! # Example

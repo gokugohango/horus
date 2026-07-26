@@ -49,7 +49,7 @@ static REGISTRY: LazyLock<Mutex<HashMap<String, NodeFactory>>> =
 
 /// Register a node factory by name.
 ///
-/// Called by the [`register_driver!`] macro. Can also be called directly.
+/// Called by the [`register_driver!`](crate::register_driver) macro. Can also be called directly.
 pub fn register(name: &str, factory: NodeFactory) {
     REGISTRY
         .lock()

@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-//! Function-pointer dispatch for Topic<T>.
+//! Function-pointer dispatch for `Topic<T>`.
 //!
 //! Each function here is a **complete** send/recv path — epoch check, ring
 //! operation, and amortized housekeeping. `try_send()` / `try_recv()` are
@@ -37,7 +37,7 @@
 //! ## Safety Invariants (applies to ALL functions below)
 //!
 //! Every function in this module runs in an `unsafe` context. The following
-//! invariants are guaranteed by the Topic<T> type and its initialization paths:
+//! invariants are guaranteed by the `Topic<T>` type and its initialization paths:
 //!
 //! 1. **Single-thread ownership**: `Topic<T>` is `!Send + !Sync`. Each instance
 //!    is accessed from exactly one thread. All `UnsafeCell` accesses (backend,

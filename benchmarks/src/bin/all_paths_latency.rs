@@ -1302,7 +1302,7 @@ fn collect_cross_proc(
 /// This captures PodShm's broadcast/overwrite semantics where "loss" is by design.
 ///
 /// Returns (latencies_ns, freshness_samples, total_messages_received, skip_count).
-/// - freshness_samples[i] = how many messages the producer wrote between read i-1 and read i
+/// - `freshness_samples[i]` = how many messages the producer wrote between read i-1 and read i
 /// - skip_count = number of times freshness > 1 (consumer fell behind, skipped messages)
 fn collect_pod_shm(
     consumer: &Topic<CmdVel>,

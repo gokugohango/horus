@@ -216,9 +216,9 @@ impl PresenceReceiver {
 
 /// Build a presence broadcast payload from local node presence.
 ///
-/// Wire format: [namespace_len:u16][namespace][host_id_len:u16][host_id]
-///              [timestamp_ns:u64][node_count:u16]
-///              [name_len:u16][name][rate_hz:f64] × node_count
+/// Wire format: `[namespace_len:u16][namespace][host_id_len:u16][host_id]`
+///              `[timestamp_ns:u64][node_count:u16]`
+///              `[name_len:u16][name][rate_hz:f64]` × node_count
 ///
 /// Returns None if no local nodes exist.
 pub fn build_local_presence(peer_id_hash: u16) -> Option<Vec<u8>> {

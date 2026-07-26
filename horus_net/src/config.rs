@@ -1,4 +1,4 @@
-//! Network configuration — parsed from [network] in horus.toml or defaults.
+//! Network configuration — parsed from `[network]` in horus.toml or defaults.
 
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, Ordering};

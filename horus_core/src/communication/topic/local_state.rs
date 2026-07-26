@@ -59,7 +59,7 @@ pub(crate) struct LocalState {
     pub cached_capacity_mask: u64, // offset 16
 
     /// Cached pointer to data region - for ring buffer write
-    /// SAFETY: Valid for Topic lifetime (points into Arc<ShmRegion>)
+    /// SAFETY: Valid for Topic lifetime (points into `Arc<ShmRegion>`)
     pub cached_data_ptr: *mut u8, // offset 24
 
     /// Locally cached tail index (for backpressure check on the ring)
@@ -69,11 +69,11 @@ pub(crate) struct LocalState {
     pub cached_capacity: u64, // offset 40
 
     /// Cached pointer to header - for atomic updates on the SHM header
-    /// SAFETY: Valid for Topic lifetime (points into Arc<ShmRegion>)
+    /// SAFETY: Valid for Topic lifetime (points into `Arc<ShmRegion>`)
     pub cached_header_ptr: *const TopicHeader, // offset 48
 
     /// Cached pointer to per-slot sequence array (for multi-producer ready flags)
-    /// SAFETY: Valid for Topic lifetime (points into Arc<ShmRegion>)
+    /// SAFETY: Valid for Topic lifetime (points into `Arc<ShmRegion>`)
     pub cached_seq_ptr: *mut u8, // offset 56
 
     // ========== SECOND CACHE LINE (64+ bytes) - COLD PATH ==========

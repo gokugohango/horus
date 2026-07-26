@@ -1,4 +1,4 @@
-//! DepthImage topic tests — validates Topic<DepthImage> zero-copy roundtrip
+//! DepthImage topic tests — validates `Topic<DepthImage>` zero-copy roundtrip
 
 #[cfg(test)]
 mod tests {

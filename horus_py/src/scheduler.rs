@@ -207,7 +207,7 @@ impl CoreNode for PyNodeAdapter {
                         // same catch_unwind path without being a panic!() call.
                         std::panic::resume_unwind(Box::new(format!(
                             "Python node '{}' tick failed: {}",
-                            &self.node_name, e
+                            self.node_name, e
                         )));
                     }
                 }

@@ -1,4 +1,4 @@
-//! PointCloud topic tests — validates Topic<PointCloud> zero-copy roundtrip
+//! PointCloud topic tests — validates `Topic<PointCloud>` zero-copy roundtrip
 
 #[cfg(test)]
 mod tests {

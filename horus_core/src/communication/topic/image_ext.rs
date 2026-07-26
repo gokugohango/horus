@@ -1,4 +1,4 @@
-//! Image topic tests — validates Topic<Image> zero-copy roundtrip
+//! Image topic tests — validates `Topic<Image>` zero-copy roundtrip
 
 #[cfg(test)]
 mod tests {

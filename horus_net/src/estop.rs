@@ -30,7 +30,7 @@ const ESTOP_MAX_FUTURE_SKEW_NS: u64 = 5_000_000_000; // 5s in the future
 static ESTOP_UNAUTH_WARNED: AtomicBool = AtomicBool::new(false);
 
 /// E-stop message wire format (compact, no serde):
-/// [host_id_hash:u16][reason_len:u16][reason:bytes][timestamp_ns:u64]
+/// `[host_id_hash:u16][reason_len:u16][reason:bytes][timestamp_ns:u64]`
 /// Total overhead: 12 bytes + reason string.
 ///
 /// Encode an e-stop message.

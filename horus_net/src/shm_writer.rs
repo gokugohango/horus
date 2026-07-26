@@ -1,10 +1,10 @@
 //! ShmRingWriter — write incoming network data to local SHM topics.
 //!
 //! Remote data arrives as raw bytes from the network. ShmRingWriter writes it
-//! into the local SHM ring buffer so local subscribers read it via Topic<T>.recv().
+//! into the local SHM ring buffer so local subscribers read it via `Topic<T>::recv()`.
 //!
 //! This directly writes to the memory-mapped SHM file using the same layout
-//! as horus_core's Topic<T>.send(). It's a "virtual publisher" that feeds
+//! as horus_core's `Topic<T>::send()`. It's a "virtual publisher" that feeds
 //! network-received data into the local topic system.
 
 use std::fs::OpenOptions;
@@ -49,7 +49,7 @@ pub struct ShmRingWriter {
 impl ShmRingWriter {
     /// Open an existing SHM topic file for writing.
     ///
-    /// The SHM file must already exist (created by a local subscriber's Topic<T>::new()).
+    /// The SHM file must already exist (created by a local subscriber's `Topic<T>::new()`).
     /// Returns `None` if the file doesn't exist or the header is invalid.
     pub fn open(topic_name: &str) -> Option<Self> {
         let sanitized = topic_name.replace(['.', '/'], "_");

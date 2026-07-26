@@ -1,4 +1,4 @@
-//! TopicMessage trait — unified wire protocol for Topic<T>
+//! TopicMessage trait — unified wire protocol for `Topic<T>`
 //!
 //! This trait bridges the gap between user-facing types and the ring buffer's
 //! wire format. Two categories:

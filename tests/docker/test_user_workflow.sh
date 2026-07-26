@@ -23,7 +23,9 @@ echo ""
 echo "── Step 1: Build horus CLI ──"
 if cargo build --no-default-features -p horus_manager --release 2>/dev/null; then
     pass "horus CLI builds"
-    HORUS="./target/release/horus"
+    # Absolute, not "./target/release/horus": step 5 runs `horus new` from
+    # inside a temp dir, and a relative path does not survive the cd.
+    HORUS="$(pwd)/target/release/horus"
 else
     fail "horus CLI build failed"
     echo "Cannot continue. Exiting."

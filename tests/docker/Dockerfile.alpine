@@ -4,8 +4,11 @@ ENV CARGO_HOME=/root/.cargo
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Alpine uses musl libc — tests that horus_sys works on musl (not just glibc)
+# openssl-libs-static is required on top of openssl-dev: musl targets link
+# -static-pie by default, so the linker needs the static archives and fails
+# with "cannot find -lssl / -lcrypto" against the shared ones alone.
 RUN apk add --no-cache \
-    curl gcc musl-dev pkgconf openssl-dev eudev-dev alsa-lib-dev \
+    curl gcc musl-dev pkgconf openssl-dev openssl-libs-static eudev-dev alsa-lib-dev \
     clang-dev git bash
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable

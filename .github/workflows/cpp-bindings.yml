@@ -536,7 +536,7 @@ jobs:
 
   # ─── libFuzzer Smoke (60s per target) ───────────────────────────────────
   # Runs each of 4 libFuzzer targets for 60 seconds. Crashes persisted as
-  # artifacts. Long-run (30 min per target) lives in cpp-bindings-nightly.yml.
+  # artifacts. (The 30-min-per-target long run was a nightly job; removed.)
   cpp-fuzz:
     name: libFuzzer Smoke (60s per target)
     runs-on: ubuntu-latest

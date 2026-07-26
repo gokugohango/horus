@@ -20,12 +20,12 @@ evidence lives, and what gaps remain.
 | Valgrind memcheck            | CI-gated              | `cpp-valgrind` job                                    |
 | Line coverage (Rust floor)   | 80% enforced          | `cargo llvm-cov --fail-under-lines 80`                |
 | Line coverage (C++ floor)    | 70% enforced          | lcov + awk threshold in `cpp-coverage`                |
-| Nightly soak duration        | 2 hours               | `cpp-bindings-nightly.yml` → `cpp-soak`               |
+| Soak duration                | 2 hours               | `cpp_soak_test` — manual only, no longer CI-scheduled |
 | Fault-injection scenarios    | 5                     | `tests/cpp_fault_injection.cpp`                       |
 | Cross-process Service        | 100 req/resp reliable | `cross_process_svc_client` → 99% success threshold    |
 | Cross-process IPC (CmdVel)   | Yes                   | `cpp-cross-process` CI job                            |
 | Cross-language (Rust↔C++↔Py) | Yes                   | `cpp-cross-language` CI job                           |
-| Fuzz long-run (nightly)      | 30 min × 4 targets    | `cpp-bindings-nightly.yml` → `cpp-fuzz-long`          |
+| Fuzz long-run                | 30 min × 4 targets    | manual only, no longer CI-scheduled                   |
 
 ## Test Matrix — Per-PR (.github/workflows/cpp-bindings.yml)
 
@@ -44,15 +44,16 @@ evidence lives, and what gaps remain.
 | `cpp-benchmark`       | cpp_benchmark binary + `cargo bench`                                       |
 | `cpp-success`         | Gate — all jobs above must pass                                            |
 
-## Test Matrix — Nightly (.github/workflows/cpp-bindings-nightly.yml)
+## Long-Running Suites — Manual Only
 
-Schedule: `0 2 * * *` (daily 2 AM UTC). Also runnable via workflow_dispatch.
+The nightly workflow (`cpp-bindings-nightly.yml`) was removed. These suites are no
+longer scheduled; the test sources remain and can be run on demand.
 
-| CI job                 | What it runs                                                                  |
+| Suite                  | What it runs                                                                  |
 |------------------------|-------------------------------------------------------------------------------|
-| `cpp-soak`             | `cpp_soak_test` — 100 Hz tick + pub/sub for 2 h; samples VmRSS/threads/fds every 60 s; fails on >10% RSS growth from t+300s baseline |
-| `cpp-fault-injection`  | 5 TESTs: SubscriberKilledMidPublish, PublisherHoldsLoanThenKilled, ShmNamespaceMissing, AbiVersionContract, RapidRestart100Cycles |
-| `cpp-fuzz-long`        | 4 libFuzzer targets × 30 min each                                             |
+| soak                   | `cpp_soak_test` — 100 Hz tick + pub/sub for 2 h; samples VmRSS/threads/fds every 60 s; fails on >10% RSS growth from t+300s baseline |
+| fault injection        | 5 TESTs: SubscriberKilledMidPublish, PublisherHoldsLoanThenKilled, ShmNamespaceMissing, AbiVersionContract, RapidRestart100Cycles (`tests/cpp_fault_injection.cpp`) |
+| fuzz long-run          | 4 libFuzzer targets × 30 min each (`fuzz/fuzz_targets/`)                       |
 
 ## Sanitizer Coverage
 
@@ -97,7 +98,7 @@ Schedule: `0 2 * * *` (daily 2 AM UTC). Also runnable via workflow_dispatch.
 - [x] libFuzzer harness — 4 targets in `fuzz/fuzz_targets/`
 - [x] proptest + loom — 4 properties + 1 loom model
 - [x] llvm-cov with 80% / 70% floor — `cpp-coverage` job
-- [x] Nightly soak + fault injection — `cpp-bindings-nightly.yml`
+- [x] Soak + fault injection suites — manual only (nightly workflow removed)
 - [x] Service FFI cross-process reliability — 100 req/resp × 99% threshold
 - [x] Pool leak-free cycles — PointCloud and Tensor verified; Image **known bug** (see below)
 - [x] Evidence pack — this document

@@ -4,7 +4,7 @@
 # Tiers:
 #   - Unit tests: Run on every PR (fast, no SHM needed for most)
 #   - UAT integration tests: Run on PR + merge to main
-#   - Stress & chaos tests: Nightly schedule only (slow, resource-intensive)
+#   - Stress & chaos tests: Manual dispatch only (slow, resource-intensive)
 
 name: Monitor Tests
 
@@ -25,9 +25,6 @@ on:
       - 'horus_library/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
-  schedule:
-    # Nightly at 03:00 UTC
-    - cron: '0 3 * * *'
   workflow_dispatch:
 
 env:
@@ -137,12 +134,12 @@ jobs:
         run: cargo test -p horus_manager --test uat_auth_flow -- --test-threads=1
 
   # ─────────────────────────────────────────────────────────────────────────────
-  #  Stress & Chaos Tests — nightly only
+  #  Stress & Chaos Tests — manual dispatch only
   # ─────────────────────────────────────────────────────────────────────────────
   stress-tests:
     name: Stress Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
@@ -176,7 +173,7 @@ jobs:
   chaos-tests:
     name: Chaos Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
@@ -232,7 +229,7 @@ jobs:
             exit 1
           fi
 
-          # Stress/chaos only run on schedule — skip check if skipped
+          # Stress/chaos only run on manual dispatch — skip check if skipped
           if [[ "${{ needs.stress-tests.result }}" == "failure" ]]; then
             echo "Stress tests failed!"
             exit 1

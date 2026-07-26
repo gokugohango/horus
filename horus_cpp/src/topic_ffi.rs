@@ -175,8 +175,16 @@ impl_topic_ffi!(accel, Accel, horus_types::Accel);
 impl_topic_ffi!(accel_stamped, AccelStamped, horus_types::AccelStamped);
 
 // ─── Detection Types (4) ────────────────────────────────────────────────────
-impl_topic_ffi!(bounding_box_2d, BoundingBox2D, horus_robotics::BoundingBox2D);
-impl_topic_ffi!(bounding_box_3d, BoundingBox3D, horus_robotics::BoundingBox3D);
+impl_topic_ffi!(
+    bounding_box_2d,
+    BoundingBox2D,
+    horus_robotics::BoundingBox2D
+);
+impl_topic_ffi!(
+    bounding_box_3d,
+    BoundingBox3D,
+    horus_robotics::BoundingBox3D
+);
 impl_topic_ffi!(detection, Detection, horus_robotics::Detection);
 impl_topic_ffi!(detection_3d, Detection3D, horus_robotics::Detection3D);
 

@@ -552,9 +552,13 @@ pub fn disk_available_mb(path: &std::path::Path) -> Option<u64> {
         // SAFETY: c_path is a valid null-terminated string; stat is zeroed POD struct
         let mut stat: libc::statvfs = unsafe { std::mem::zeroed() };
         if unsafe { libc::statvfs(c_path.as_ptr(), &mut stat) } == 0 {
-            stat.f_bavail
-                .checked_mul(stat.f_frsize)
-                .map(|bytes| bytes / (1024 * 1024))
+            // Widths differ per platform: f_bavail is u32 on macOS and u64 on
+            // Linux, so widen both before multiplying.
+            #[allow(clippy::unnecessary_cast)]
+            let avail = stat.f_bavail as u64;
+            #[allow(clippy::unnecessary_cast)]
+            let frsize = stat.f_frsize as u64;
+            avail.checked_mul(frsize).map(|bytes| bytes / (1024 * 1024))
         } else {
             None
         }

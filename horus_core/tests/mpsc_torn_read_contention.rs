@@ -64,7 +64,10 @@ fn mpsc_no_torn_read_under_parallel_contention() {
         "torn-read harness: {} rounds × {} topics × {} writers, cap {}, read {} messages, {} torn",
         rounds, n_topics, n_writers, cap, read, torn
     );
-    assert!(read > 0, "harness delivered nothing — not exercising the path");
+    assert!(
+        read > 0,
+        "harness delivered nothing — not exercising the path"
+    );
     assert_eq!(
         torn, 0,
         "MPSC torn read under parallel contention: {} of {} reads had mismatched lanes \

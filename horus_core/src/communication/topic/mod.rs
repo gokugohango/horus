@@ -385,14 +385,13 @@ pub(crate) fn fnv1a_type_hash(s: &str) -> u32 {
     hash
 }
 
-/// Check if a process is still alive (signal 0 = existence check).
+/// Check if a process is still alive.
+///
+/// Delegates to `horus_sys`, the platform abstraction layer: `kill(pid, 0)` on
+/// Unix, `OpenProcess` on Windows. `libc::kill` does not exist on Windows, so
+/// calling it directly here broke the Windows build.
 fn is_process_alive(pid: u32) -> bool {
-    if pid == 0 {
-        return false;
-    }
-    // kill(pid, 0) checks process existence without sending a signal.
-    // Returns 0 if process exists, -1 with ESRCH if it doesn't.
-    unsafe { libc::kill(pid as i32, 0) == 0 }
+    horus_sys::discover::is_process_alive(pid)
 }
 
 pub(crate) use header::TopicHeader;
@@ -1170,7 +1169,8 @@ impl<T: Clone + Send + Sync + Serialize + DeserializeOwned + 'static> RingTopic<
             }
             self.initialize_backend();
             registry::notify_epoch_change(&self.name, stable_epoch);
-            self.process_epoch.fetch_max(stable_epoch, Ordering::Release);
+            self.process_epoch
+                .fetch_max(stable_epoch, Ordering::Release);
         }
 
         let migrator = BackendMigrator::new(header);
@@ -1650,7 +1650,8 @@ impl<T: Clone + Send + Sync + Serialize + DeserializeOwned + 'static> RingTopic<
         // backend and dropping ALL messages (observed: multi-producer -> 1-consumer
         // delivering 0). fetch_max never regresses a concurrent migrator's higher
         // value, preserving `process_epoch <= migration_epoch`.
-        self.process_epoch.fetch_max(actual_epoch, Ordering::Release);
+        self.process_epoch
+            .fetch_max(actual_epoch, Ordering::Release);
         Self::sync_local(local, header, true);
 
         // If slot_size grew (auto-grow from another process), grow our mmap to match.
@@ -1688,7 +1689,8 @@ impl<T: Clone + Send + Sync + Serialize + DeserializeOwned + 'static> RingTopic<
         local.local_tail = header_post.tail.load(Ordering::Acquire);
         // Propagate to other same-process Topics
         registry::notify_epoch_change(&self.name, actual_epoch);
-        self.process_epoch.fetch_max(actual_epoch, Ordering::Release);
+        self.process_epoch
+            .fetch_max(actual_epoch, Ordering::Release);
     }
 
     /// Get the topic name
@@ -2363,7 +2365,12 @@ impl<T: TopicMessage> Topic<T> {
     /// Like [`publish_keepalive`] but for topics whose pool is not `self.pool`
     /// (the auto-pool `Topic<Tensor>` handle path passes `self.pool()`).
     #[inline]
-    fn publish_keepalive_on(&self, pool: Arc<TensorPool>, primary: Tensor, secondary: Option<Tensor>) {
+    fn publish_keepalive_on(
+        &self,
+        pool: Arc<TensorPool>,
+        primary: Tensor,
+        secondary: Option<Tensor>,
+    ) {
         if let Some(prev) = self
             .last_sent_keepalive
             .replace(Some((pool, primary, secondary)))

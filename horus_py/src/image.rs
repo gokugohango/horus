@@ -14,8 +14,8 @@ use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyTuple};
 
-use crate::tensor_convert;
 use crate::tensor::PyTensorHandle;
+use crate::tensor_convert;
 use horus_core::memory::TensorHandle;
 
 /// Parse a user-facing encoding string into `ImageEncoding`.

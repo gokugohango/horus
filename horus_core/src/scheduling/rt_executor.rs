@@ -195,8 +195,8 @@ impl RtExecutor {
             // `horus record export` produced metadata-only output. Gated on an
             // active recording tick, so there is zero cost when not recording.
             if recorder.is_active_tick() {
-                let subscribers = crate::communication::topic_node_registry()
-                    .subscribers_for_node(&node.name);
+                let subscribers =
+                    crate::communication::topic_node_registry().subscribers_for_node(&node.name);
                 if !subscribers.is_empty() {
                     let topics_dir = crate::memory::platform::shm_topics_dir();
                     for sub in &subscribers {
@@ -2394,7 +2394,8 @@ mod tests {
         // 1kHz rate + 800us budget → during tick, dt()==1ms and
         // budget_remaining()<MAX (and <=800us). Without FIX #5 the executor
         // never sets the context, so dt()==ZERO and budget_remaining()==MAX.
-        let mut reg = make_rt_registered("ctx_probe", Arc::new(std::sync::atomic::AtomicU64::new(0)));
+        let mut reg =
+            make_rt_registered("ctx_probe", Arc::new(std::sync::atomic::AtomicU64::new(0)));
         reg.node = super::super::types::NodeKind::new(Box::new(probe));
         reg.rate_hz = Some(1000.0);
         reg.tick_budget = Some(Duration::from_micros(800));
@@ -2419,8 +2420,14 @@ mod tests {
         running.store(false, Ordering::SeqCst);
         let _ = executor.stop();
 
-        assert!(ticked.load(Ordering::Relaxed), "probe node must have ticked");
-        let dt = observed_dt.lock().unwrap().expect("dt must have been recorded");
+        assert!(
+            ticked.load(Ordering::Relaxed),
+            "probe node must have ticked"
+        );
+        let dt = observed_dt
+            .lock()
+            .unwrap()
+            .expect("dt must have been recorded");
         let budget = observed_budget
             .lock()
             .unwrap()
@@ -2433,7 +2440,10 @@ mod tests {
             "dt() during executor tick must equal 1/rate, got {:?}",
             dt
         );
-        assert!(dt > Duration::ZERO, "dt() must not be the inert ZERO fallback");
+        assert!(
+            dt > Duration::ZERO,
+            "dt() must not be the inert ZERO fallback"
+        );
         // budget_remaining = budget - elapsed. RED: budget == Duration::MAX.
         assert!(
             budget < Duration::MAX,
@@ -2514,7 +2524,10 @@ mod tests {
             .expect("watchdog registered");
 
         let panic_count = Arc::new(std::sync::atomic::AtomicU64::new(0));
-        let mut reg = make_rt_registered("panic_critical", Arc::new(std::sync::atomic::AtomicU64::new(0)));
+        let mut reg = make_rt_registered(
+            "panic_critical",
+            Arc::new(std::sync::atomic::AtomicU64::new(0)),
+        );
         reg.node = super::super::types::NodeKind::new(Box::new(AlwaysPanicNode {
             name: "panic_critical".to_string(),
             count: panic_count.clone(),
@@ -2577,7 +2590,8 @@ mod tests {
 
         let entered = Arc::new(AtomicBool::new(false));
         let release = Arc::new(AtomicBool::new(false));
-        let mut reg = make_rt_registered("hang_node", Arc::new(std::sync::atomic::AtomicU64::new(0)));
+        let mut reg =
+            make_rt_registered("hang_node", Arc::new(std::sync::atomic::AtomicU64::new(0)));
         reg.node = super::super::types::NodeKind::new(Box::new(HangNode {
             name: "hang_node".to_string(),
             entered: entered.clone(),
@@ -2602,7 +2616,10 @@ mod tests {
             }
             std::thread::sleep(Duration::from_millis(1));
         }
-        assert!(entered.load(Ordering::Relaxed), "hang tick must have started");
+        assert!(
+            entered.load(Ordering::Relaxed),
+            "hang tick must have started"
+        );
         std::thread::sleep(Duration::from_millis(150)); // >> 30ms timeout
 
         // The scheduler main loop (absent here) would call this each cycle.

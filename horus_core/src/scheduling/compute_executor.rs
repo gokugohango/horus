@@ -513,14 +513,16 @@ mod tests {
         let dt_a = Arc::new(Mutex::new(None));
         let dt_b = Arc::new(Mutex::new(None));
 
-        let mut reg_a = make_compute_node("probe_a", Arc::new(std::sync::atomic::AtomicU64::new(0)));
+        let mut reg_a =
+            make_compute_node("probe_a", Arc::new(std::sync::atomic::AtomicU64::new(0)));
         reg_a.node = super::super::types::NodeKind::new(Box::new(CtxProbeNode {
             name: "probe_a".to_string(),
             observed_dt: dt_a.clone(),
         }));
         reg_a.rate_hz = Some(500.0);
 
-        let mut reg_b = make_compute_node("probe_b", Arc::new(std::sync::atomic::AtomicU64::new(0)));
+        let mut reg_b =
+            make_compute_node("probe_b", Arc::new(std::sync::atomic::AtomicU64::new(0)));
         reg_b.node = super::super::types::NodeKind::new(Box::new(CtxProbeNode {
             name: "probe_b".to_string(),
             observed_dt: dt_b.clone(),
@@ -528,8 +530,12 @@ mod tests {
         reg_b.rate_hz = Some(500.0);
 
         let running = Arc::new(AtomicBool::new(true));
-        let executor =
-            ComputeExecutor::start(vec![reg_a, reg_b], running.clone(), 1_u64.ms(), test_monitors());
+        let executor = ComputeExecutor::start(
+            vec![reg_a, reg_b],
+            running.clone(),
+            1_u64.ms(),
+            test_monitors(),
+        );
 
         // Give the pool time to run several parallel cycles.
         for _ in 0..100 {
@@ -544,8 +550,14 @@ mod tests {
         let observed_a = dt_a.lock().unwrap().expect("probe_a dt must be recorded");
         let observed_b = dt_b.lock().unwrap().expect("probe_b dt must be recorded");
         let expected = Duration::from_secs_f64(1.0 / 500.0);
-        assert_eq!(observed_a, expected, "probe_a dt() on child thread must be 1/rate");
-        assert_eq!(observed_b, expected, "probe_b dt() on child thread must be 1/rate");
+        assert_eq!(
+            observed_a, expected,
+            "probe_a dt() on child thread must be 1/rate"
+        );
+        assert_eq!(
+            observed_b, expected,
+            "probe_b dt() on child thread must be 1/rate"
+        );
     }
 
     // ========================================================================

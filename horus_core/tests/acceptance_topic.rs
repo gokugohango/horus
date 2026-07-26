@@ -470,16 +470,16 @@ impl horus_core::Node for MotorDriverNode {
 #[test]
 fn test_topics_macro_with_nodes_pub_sub() {
     let _g = macro_topic_lock(); // shares MOTOR_CMD/ENCODER_FB with other tests
-    // Full user-perspective test:
-    // 1. Define topics with topics! macro (done above)
-    // 2. Create nodes using Topic::publish/subscribe
-    // 3. Run tick loop manually
-    // 4. Verify data flows between nodes via typed topics
-    //
-    // Topic::from_descriptor() calls Topic::new() internally.
-    // To share the same underlying backend (like clone()), we create one
-    // Topic per name and clone it for the second node — this matches real
-    // usage where nodes in the same process share Topic handles.
+                                 // Full user-perspective test:
+                                 // 1. Define topics with topics! macro (done above)
+                                 // 2. Create nodes using Topic::publish/subscribe
+                                 // 3. Run tick loop manually
+                                 // 4. Verify data flows between nodes via typed topics
+                                 //
+                                 // Topic::from_descriptor() calls Topic::new() internally.
+                                 // To share the same underlying backend (like clone()), we create one
+                                 // Topic per name and clone it for the second node — this matches real
+                                 // usage where nodes in the same process share Topic handles.
 
     // Create shared topic handles (one per topic name, cloned to each node)
     let motor_topic: horus_core::Topic<MotorCommand> =
@@ -537,8 +537,8 @@ fn test_topics_macro_with_nodes_pub_sub() {
 #[test]
 fn test_topics_macro_type_safety_compile_time() {
     let _g = macro_topic_lock(); // shares MOTOR_CMD/ENCODER_FB with other tests
-    // This test verifies that the topics! macro produces correctly-typed descriptors.
-    // If the types were wrong, this test wouldn't compile at all.
+                                 // This test verifies that the topics! macro produces correctly-typed descriptors.
+                                 // If the types were wrong, this test wouldn't compile at all.
 
     // MOTOR_CMD is TopicDescriptor<MotorCommand> — name() gives the topic string
     let cmd_topic: horus_core::Topic<MotorCommand> =

@@ -434,7 +434,7 @@ mod tests {
         assert_eq!(handle.dtype(), TensorDtype::F32);
         assert_eq!(handle.numel(), 200);
         assert_eq!(handle.nbytes(), 800); // 200 * 4 bytes
-        // Data is CPU-accessible and correctly sized.
+                                          // Data is CPU-accessible and correctly sized.
         assert_eq!(handle.data_slice_mut().expect("cpu data").len(), 800);
     }
 

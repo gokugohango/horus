@@ -33,7 +33,9 @@ const SENTINEL: &str = "__FANOUT_SPILL_END__";
 /// Position-dependent pattern so truncation or corruption is detectable, not just
 /// a length check. Publisher and subscriber both regenerate it independently.
 fn payload() -> String {
-    (0..MSG_LEN).map(|i| (b'A' + (i % 26) as u8) as char).collect()
+    (0..MSG_LEN)
+        .map(|i| (b'A' + (i % 26) as u8) as char)
+        .collect()
 }
 
 fn is_child() -> bool {
@@ -141,19 +143,36 @@ fn cross_process_fanout_spill_1pub_2sub() {
     let out2 = sub2.wait_with_output().expect("sub2 wait");
     let s1 = String::from_utf8_lossy(&out1.stdout);
     let s2 = String::from_utf8_lossy(&out2.stdout);
-    eprintln!("DIAG parent_backend={} | sub1: {} | sub2: {}", topic.backend_name(), s1.trim(), s2.trim());
+    eprintln!(
+        "DIAG parent_backend={} | sub1: {} | sub2: {}",
+        topic.backend_name(),
+        s1.trim(),
+        s2.trim()
+    );
 
     let (ok1, bad1) = (field(&s1, "SUB_OK:"), field(&s1, "SUB_BAD:"));
     let (ok2, bad2) = (field(&s2, "SUB_OK:"), field(&s2, "SUB_BAD:"));
 
     // No corruption/truncation on either subscriber — the spilled bytes must
     // round-trip byte-for-byte across the process boundary via the pool.
-    assert_eq!(bad1, 0, "sub1 received corrupted/truncated spilled messages: {s1}");
-    assert_eq!(bad2, 0, "sub2 received corrupted/truncated spilled messages: {s2}");
+    assert_eq!(
+        bad1, 0,
+        "sub1 received corrupted/truncated spilled messages: {s1}"
+    );
+    assert_eq!(
+        bad2, 0,
+        "sub2 received corrupted/truncated spilled messages: {s2}"
+    );
     // Each subscriber must receive the >8 KiB message at least once (was dropped
     // entirely before the spill fix).
-    assert!(ok1 > 0, "sub1 must receive the >8 KiB message intact via spill: {s1}");
-    assert!(ok2 > 0, "sub2 must receive the >8 KiB message intact via spill: {s2}");
+    assert!(
+        ok1 > 0,
+        "sub1 must receive the >8 KiB message intact via spill: {s1}"
+    );
+    assert!(
+        ok2 > 0,
+        "sub2 must receive the >8 KiB message intact via spill: {s2}"
+    );
 }
 
 // ===========================================================================
@@ -234,7 +253,10 @@ fn child_subscriber_indexed() {
             }
         }
     }
-    println!("SUB_OK:{ok} SUB_BAD:{bad} SUB_MAX:{max_idx} BACKEND:{}", topic.backend_name());
+    println!(
+        "SUB_OK:{ok} SUB_BAD:{bad} SUB_MAX:{max_idx} BACKEND:{}",
+        topic.backend_name()
+    );
 }
 
 #[test]

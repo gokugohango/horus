@@ -430,7 +430,10 @@ mod tests {
 
     #[test]
     fn single_node() {
-        let nodes = vec![make_registered(TestNode::new("sn_A").publishes("sn_out"), 0)];
+        let nodes = vec![make_registered(
+            TestNode::new("sn_A").publishes("sn_out"),
+            0,
+        )];
         let graph = DependencyGraph::build(&nodes).unwrap();
         assert_eq!(graph.step_count(), 1);
         assert_eq!(graph.steps()[0], vec![0]);
@@ -441,7 +444,10 @@ mod tests {
         // A -> B -> C
         let nodes = vec![
             make_registered(TestNode::new("lc_A").publishes("lc_ab"), 0),
-            make_registered(TestNode::new("lc_B").subscribes("lc_ab").publishes("lc_bc"), 1),
+            make_registered(
+                TestNode::new("lc_B").subscribes("lc_ab").publishes("lc_bc"),
+                1,
+            ),
             make_registered(TestNode::new("lc_C").subscribes("lc_bc"), 2),
         ];
         let graph = DependencyGraph::build(&nodes).unwrap();
@@ -467,10 +473,24 @@ mod tests {
     fn diamond_a_bc_d() {
         // A -> B, A -> C, B -> D, C -> D
         let nodes = vec![
-            make_registered(TestNode::new("dm_A").publishes("dm_ab").publishes("dm_ac"), 0),
-            make_registered(TestNode::new("dm_B").subscribes("dm_ab").publishes("dm_bd"), 1),
-            make_registered(TestNode::new("dm_C").subscribes("dm_ac").publishes("dm_cd"), 1),
-            make_registered(TestNode::new("dm_D").subscribes("dm_bd").subscribes("dm_cd"), 2),
+            make_registered(
+                TestNode::new("dm_A").publishes("dm_ab").publishes("dm_ac"),
+                0,
+            ),
+            make_registered(
+                TestNode::new("dm_B").subscribes("dm_ab").publishes("dm_bd"),
+                1,
+            ),
+            make_registered(
+                TestNode::new("dm_C").subscribes("dm_ac").publishes("dm_cd"),
+                1,
+            ),
+            make_registered(
+                TestNode::new("dm_D")
+                    .subscribes("dm_bd")
+                    .subscribes("dm_cd"),
+                2,
+            ),
         ];
         let graph = DependencyGraph::build(&nodes).unwrap();
         assert_eq!(graph.step_count(), 3);
@@ -625,7 +645,10 @@ mod tests {
 
     #[test]
     fn independent_chains_single_rt() {
-        let nodes = vec![make_registered(TestNode::new("ics_A").publishes("ics_x"), 0)];
+        let nodes = vec![make_registered(
+            TestNode::new("ics_A").publishes("ics_x"),
+            0,
+        )];
         let graph = DependencyGraph::build(&nodes).unwrap();
         let chains = graph.independent_chains(&[0]);
         assert_eq!(chains.len(), 1);
@@ -651,8 +674,7 @@ mod tests {
         let mut nodes = Vec::new();
         for i in 0..100 {
             nodes.push(make_registered(
-                TestNode::new(&format!("lgp_prod_{}", i))
-                    .publishes(&format!("lgp_topic_{}", i)),
+                TestNode::new(&format!("lgp_prod_{}", i)).publishes(&format!("lgp_topic_{}", i)),
                 0,
             ));
         }
@@ -701,7 +723,7 @@ mod tests {
         assert_eq!(graph.step_count(), 2);
         assert_eq!(graph.steps()[0].len(), 2); // A, B parallel
         assert_eq!(graph.steps()[1], vec![2]); // C depends on both
-        // C should have dep_count == 2 (from A and B)
+                                               // C should have dep_count == 2 (from A and B)
         assert_eq!(graph.dep_counts()[2], 2);
     }
 
@@ -710,7 +732,10 @@ mod tests {
         // Verify successors and dep_counts are populated correctly
         let nodes = vec![
             make_registered(TestNode::new("rd_A").publishes("rd_ab"), 0),
-            make_registered(TestNode::new("rd_B").subscribes("rd_ab").publishes("rd_bc"), 1),
+            make_registered(
+                TestNode::new("rd_B").subscribes("rd_ab").publishes("rd_bc"),
+                1,
+            ),
             make_registered(TestNode::new("rd_C").subscribes("rd_bc"), 2),
         ];
         let graph = DependencyGraph::build(&nodes).unwrap();

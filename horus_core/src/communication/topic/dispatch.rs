@@ -674,8 +674,7 @@ pub(super) fn recv_fanout_shm<T: Clone + Send + Sync + Serialize + DeserializeOw
                 {
                     // SAFETY: `bytes` holds exactly a SpillDescriptor (repr(C), 40B);
                     // read_unaligned copies it out with no alignment assumption.
-                    let desc =
-                        std::ptr::read_unaligned(bytes.as_ptr() as *const SpillDescriptor);
+                    let desc = std::ptr::read_unaligned(bytes.as_ptr() as *const SpillDescriptor);
                     read_spilled_retained::<T>(desc, topic.name())
                 } else {
                     bincode::deserialize(&bytes).ok()

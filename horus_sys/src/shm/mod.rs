@@ -941,7 +941,10 @@ mod tests {
         let _guard = env_lock();
         std::env::set_var("HORUS_NAMESPACE", "");
         let ns = generate_namespace();
-        assert!(!ns.is_empty(), "empty env var must not yield an empty namespace");
+        assert!(
+            !ns.is_empty(),
+            "empty env var must not yield an empty namespace"
+        );
         assert_eq!(ns, "default", "empty override falls back to shared default");
         std::env::remove_var("HORUS_NAMESPACE");
     }

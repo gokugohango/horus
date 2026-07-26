@@ -76,7 +76,10 @@ fn stop_server(running: Arc<AtomicBool>, handle: std::thread::JoinHandle<()>) {
 fn wait_flag(flag: &AtomicBool, what: &str) {
     let t0 = Instant::now();
     while !flag.load(Ordering::Acquire) {
-        assert!(t0.elapsed() < Duration::from_secs(3), "{what} never happened");
+        assert!(
+            t0.elapsed() < Duration::from_secs(3),
+            "{what} never happened"
+        );
         std::thread::sleep(Duration::from_millis(5));
     }
 }

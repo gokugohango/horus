@@ -27,7 +27,10 @@ fn is_child() -> bool {
 /// Child: publish `count` messages tagged with its id, print a marker, then EXIT.
 fn child_publish() {
     let topic_name = std::env::var(TOPIC_ENV).expect("TOPIC_ENV");
-    let count: u64 = std::env::var(COUNT_ENV).expect("COUNT_ENV").parse().unwrap();
+    let count: u64 = std::env::var(COUNT_ENV)
+        .expect("COUNT_ENV")
+        .parse()
+        .unwrap();
     let id: u64 = std::env::var(ID_ENV).expect("ID_ENV").parse().unwrap();
     // Let the parent (early subscriber) exist first.
     std::thread::sleep(Duration::from_millis(200));

@@ -66,7 +66,9 @@ impl PoolModel {
             });
         }
         for i in 0..n {
-            slots[i as usize].next_free.store(head as u64, Ordering::Relaxed);
+            slots[i as usize]
+                .next_free
+                .store(head as u64, Ordering::Relaxed);
             head = i;
         }
         Self {
@@ -83,7 +85,9 @@ impl PoolModel {
             if slot_id == INVALID {
                 return None;
             }
-            let next = self.slots[slot_id as usize].next_free.load(Ordering::Acquire) as u32;
+            let next = self.slots[slot_id as usize]
+                .next_free
+                .load(Ordering::Acquire) as u32;
             let new_tagged = pack(gen.wrapping_add(1), next);
             if self
                 .free_stack_head
@@ -136,9 +140,13 @@ impl PoolModel {
 fn alloc_release(pool: &PoolModel) {
     if let Some(slot) = pool.pop_and_claim() {
         // Exclusive-ownership invariant: no other thread may hold this slot.
-        let was = pool.slots[slot as usize].occupied.swap(true, Ordering::AcqRel);
+        let was = pool.slots[slot as usize]
+            .occupied
+            .swap(true, Ordering::AcqRel);
         assert!(!was, "DOUBLE-ALLOCATION: slot {slot} handed to two threads");
-        pool.slots[slot as usize].occupied.store(false, Ordering::Release);
+        pool.slots[slot as usize]
+            .occupied
+            .store(false, Ordering::Release);
         pool.release(slot);
     }
 }

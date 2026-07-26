@@ -7546,7 +7546,10 @@ binary = \"bin/mycmd\"
             .dependencies
             .get("existing-dep")
             .expect("existing-dep should still be present");
-        assert!(updated.is_crates_io(), "source should be updated to crates.io");
+        assert!(
+            updated.is_crates_io(),
+            "source should be updated to crates.io"
+        );
         assert_eq!(updated.version(), Some("2.0.0"), "version should be bumped");
     }
 }

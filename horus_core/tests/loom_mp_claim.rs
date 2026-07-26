@@ -131,10 +131,17 @@ fn run<const CAP: usize>(prods: usize) {
         // overwritten read), and exactly `successes` messages are readable.
         let mut got = 0u32;
         while let Some((val, pos)) = ring.recv() {
-            assert_eq!(val, pos + 1, "overwrite/torn: value {val} at position {pos}");
+            assert_eq!(
+                val,
+                pos + 1,
+                "overwrite/torn: value {val} at position {pos}"
+            );
             got += 1;
         }
-        assert_eq!(got, successes, "readable count {got} != successful sends {successes}");
+        assert_eq!(
+            got, successes,
+            "readable count {got} != successful sends {successes}"
+        );
     });
 }
 

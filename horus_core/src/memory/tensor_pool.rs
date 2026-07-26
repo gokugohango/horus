@@ -1242,7 +1242,11 @@ impl TensorPool {
         // 4. Without this check, B reads G+1's data thinking it's G's
         if !self.slot_id_in_range(tensor.slot_id) {
             return Err(HorusError::Memory(
-                format!("slot_id {} out of range — corrupt descriptor", tensor.slot_id).into(),
+                format!(
+                    "slot_id {} out of range — corrupt descriptor",
+                    tensor.slot_id
+                )
+                .into(),
             ));
         }
         let slot = self.slot(tensor.slot_id);
@@ -1301,7 +1305,11 @@ impl TensorPool {
         // tensor now occupying this slot.
         if !self.slot_id_in_range(tensor.slot_id) {
             return Err(HorusError::Memory(
-                format!("slot_id {} out of range — corrupt descriptor", tensor.slot_id).into(),
+                format!(
+                    "slot_id {} out of range — corrupt descriptor",
+                    tensor.slot_id
+                )
+                .into(),
             ));
         }
         let slot = self.slot(tensor.slot_id);
@@ -1606,17 +1614,11 @@ impl TensorPool {
             let new_tagged = pack_tagged_head(generation.wrapping_add(1), next);
             if header
                 .free_stack_head
-                .compare_exchange_weak(
-                    tagged_head,
-                    new_tagged,
-                    Ordering::AcqRel,
-                    Ordering::Relaxed,
-                )
+                .compare_exchange_weak(tagged_head, new_tagged, Ordering::AcqRel, Ordering::Relaxed)
                 .is_ok()
             {
                 // Won the pop — `slot_id` is removed from the stack and ours alone.
-                slot.owner_pid
-                    .store(std::process::id(), Ordering::Release);
+                slot.owner_pid.store(std::process::id(), Ordering::Release);
                 slot.flags.store(SLOT_ALLOCATED, Ordering::Release);
                 return Some(slot_id);
             }
@@ -1689,7 +1691,6 @@ impl TensorPool {
     fn is_process_alive(pid: u32) -> bool {
         horus_sys::process::ProcessHandle::from_pid(pid).is_alive()
     }
-
 
     fn return_slot(&self, slot_id: u32) {
         let header = self.header();
@@ -3456,9 +3457,11 @@ mod tests {
         let shape = [64u64 * 1024]; // 64KB; region exhausts after 4 cycles w/o reuse
         let mut peak_used = 0usize;
         for i in 0..100 {
-            let t = pool.alloc(&shape, TensorDtype::U8, Device::cpu()).unwrap_or_else(|e| {
-                panic!("alloc cycle {i} failed (data-region leak regressed): {e}")
-            });
+            let t = pool
+                .alloc(&shape, TensorDtype::U8, Device::cpu())
+                .unwrap_or_else(|e| {
+                    panic!("alloc cycle {i} failed (data-region leak regressed): {e}")
+                });
             peak_used = peak_used.max(pool.stats().used_bytes);
             pool.release(&t);
         }
@@ -4301,7 +4304,11 @@ mod tests {
         // collapses the data region onto the header. Keep `pool` alive so the file
         // exists for reopening.
         {
-            let file = OpenOptions::new().read(true).write(true).open(&path).unwrap();
+            let file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&path)
+                .unwrap();
             let mut mmap = unsafe { MmapOptions::new().map_mut(&file).unwrap() };
             let header = unsafe { &mut *(mmap.as_mut_ptr() as *mut PoolHeader) };
             header.slot_alignment = 0;
@@ -4315,7 +4322,11 @@ mod tests {
         // Restore alignment; corrupt max_slots to an absurd value whose slot region
         // would push the data region far past the mapped file (OOB slot indexing).
         {
-            let file = OpenOptions::new().read(true).write(true).open(&path).unwrap();
+            let file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&path)
+                .unwrap();
             let mut mmap = unsafe { MmapOptions::new().map_mut(&file).unwrap() };
             let header = unsafe { &mut *(mmap.as_mut_ptr() as *mut PoolHeader) };
             header.slot_alignment = 64;

@@ -1353,7 +1353,7 @@ mod tests {
             b.wait();
             for i in 0..msgs as u64 {
                 let val = i * 2; // even
-                // Drop-oldest send never fails — never blocks on a slow consumer.
+                                 // Drop-oldest send never fails — never blocks on a slow consumer.
                 let _ = unsafe { ring.send_pod(&val, p0) };
             }
         });
@@ -1407,7 +1407,11 @@ mod tests {
         // progress, and — crucially — (c) never sees a duplicate or an
         // out-of-order value within a publisher's stream.
         for (name, data) in [("s0", &s0_data), ("s1", &s1_data)] {
-            assert!(data.len() <= msgs * 2, "{name} over-delivered {}", data.len());
+            assert!(
+                data.len() <= msgs * 2,
+                "{name} over-delivered {}",
+                data.len()
+            );
             assert!(!data.is_empty(), "{name} received nothing");
 
             let even: Vec<u64> = data.iter().filter(|v| *v % 2 == 0).copied().collect();
@@ -1606,7 +1610,9 @@ mod tests {
         unsafe {
             let ring = ShmFanoutRing::init_owner(ptr, 8, true, 64);
             let p = ring.register_publisher().unwrap(); // slot 0
-            let subs: Vec<usize> = (0..6).map(|_| ring.register_subscriber().unwrap()).collect();
+            let subs: Vec<usize> = (0..6)
+                .map(|_| ring.register_subscriber().unwrap())
+                .collect();
             for &h in &[1usize, 3, 4] {
                 ring.deregister_subscriber(subs[h]);
             }
@@ -1618,7 +1624,11 @@ mod tests {
             );
             ring.send_pod(&123u64, p);
             for s in [0usize, 2, 5] {
-                assert_eq!(ring.pending_count_for_sub(s), 1, "active sub {s} got the msg");
+                assert_eq!(
+                    ring.pending_count_for_sub(s),
+                    1,
+                    "active sub {s} got the msg"
+                );
                 let got: Option<u64> = ring.recv_pod(s);
                 assert_eq!(got, Some(123), "active sub {s} receives");
             }
@@ -1679,7 +1689,10 @@ mod tests {
             assert_eq!(id, 0);
             let meta = &*ring.meta_ptr;
             assert!(meta.pub_active.load(Ordering::Relaxed) & 1 != 0);
-            assert_eq!(meta.pub_owner_pids[0].load(Ordering::Relaxed), std::process::id());
+            assert_eq!(
+                meta.pub_owner_pids[0].load(Ordering::Relaxed),
+                std::process::id()
+            );
             // Clean-drop sequence: clear bit+PID, then release the flock.
             ring.deregister_publisher(id);
             drop(lock);
@@ -1721,7 +1734,10 @@ mod tests {
             let (id, _lock) = ring
                 .register_publisher_locked(&topic)
                 .expect("dead slot must be reclaimable");
-            assert_eq!(id, 0, "must reclaim abandoned slot 0, not skip to a fresh slot");
+            assert_eq!(
+                id, 0,
+                "must reclaim abandoned slot 0, not skip to a fresh slot"
+            );
             assert_eq!(
                 meta.pub_owner_pids[0].load(Ordering::Relaxed),
                 std::process::id(),
@@ -1778,8 +1794,13 @@ mod tests {
             let meta = &*ring.meta_ptr;
             meta.pub_active.fetch_or(1 << 0, Ordering::Relaxed);
             meta.pub_owner_pids[0].store(std::process::id(), Ordering::Relaxed); // OUR pid
-            let (id, _lock) = ring.register_publisher_locked(&topic).expect("claim a slot");
-            assert_ne!(id, 0, "must NOT reclaim our own LIVE slot 0 (anti-UB guard)");
+            let (id, _lock) = ring
+                .register_publisher_locked(&topic)
+                .expect("claim a slot");
+            assert_ne!(
+                id, 0,
+                "must NOT reclaim our own LIVE slot 0 (anti-UB guard)"
+            );
             assert_eq!(id, 1, "guard skips slot 0, claims the next free slot");
             // Slot 0 left untouched (still ours, still active).
             assert_eq!(

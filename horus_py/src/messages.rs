@@ -16,13 +16,6 @@
 //! msg = topic.recv()  # Returns CmdVel backed by Rust POD
 //! ```
 
-use horus_types::{
-    Accel, AccelStamped, Clock, DiagnosticReport, DiagnosticStatus, DiagnosticValue, EmergencyStop,
-    Heartbeat, NodeHeartbeat, Point3, Pose2D, Pose3D, PoseStamped, PoseWithCovariance, Quaternion,
-    ResourceUsage, SafetyStatus, TimeReference, TransformStamped, Twist, TwistWithCovariance,
-    Vector3,
-};
-use horus_robotics::CmdVel;
 use horus_robotics::messages::control::{
     DifferentialDriveCommand, JointCommand, MotorCommand, PidConfig, ServoCommand, TrajectoryPoint,
 };
@@ -45,6 +38,13 @@ use horus_robotics::messages::sensor::{
 };
 use horus_robotics::messages::tracking::{TrackedObject, TrackingHeader};
 use horus_robotics::messages::vision::{CameraInfo, CompressedImage, RegionOfInterest, StereoInfo};
+use horus_robotics::CmdVel;
+use horus_types::{
+    Accel, AccelStamped, Clock, DiagnosticReport, DiagnosticStatus, DiagnosticValue, EmergencyStop,
+    Heartbeat, NodeHeartbeat, Point3, Pose2D, Pose3D, PoseStamped, PoseWithCovariance, Quaternion,
+    ResourceUsage, SafetyStatus, TimeReference, TransformStamped, Twist, TwistWithCovariance,
+    Vector3,
+};
 use pyo3::prelude::*;
 
 // ============================================================================

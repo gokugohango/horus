@@ -477,7 +477,14 @@ mod tests {
 
     // ─── §3 reassembly DoS bounds ───────────────────────────────────────────
 
-    fn part_frag(topic: u32, id: u32, index: u16, count: u16, total: u32, bytes: usize) -> Fragment {
+    fn part_frag(
+        topic: u32,
+        id: u32,
+        index: u16,
+        count: u16,
+        total: u32,
+        bytes: usize,
+    ) -> Fragment {
         Fragment {
             topic_hash: topic,
             sequence: 0,
@@ -499,7 +506,11 @@ mod tests {
         // u16::MAX fragments would drive a huge vec![None; count] allocation.
         let frag = part_frag(1, 1, 0, u16::MAX, 1000, 100);
         assert!(reasm.feed(frag).is_none());
-        assert_eq!(reasm.pending_count(), 0, "no buffer allocated for oversized count");
+        assert_eq!(
+            reasm.pending_count(),
+            0,
+            "no buffer allocated for oversized count"
+        );
     }
 
     #[test]
@@ -518,7 +529,9 @@ mod tests {
         }
         assert_eq!(reasm.pending_count(), MAX_PENDING_MESSAGES);
         // A new distinct key past the ceiling is refused (map does not grow).
-        assert!(reasm.feed(part_frag(999_999, 999_999, 0, 2, 2000, 1000)).is_none());
+        assert!(reasm
+            .feed(part_frag(999_999, 999_999, 0, 2, 2000, 1000))
+            .is_none());
         assert_eq!(reasm.pending_count(), MAX_PENDING_MESSAGES);
     }
 

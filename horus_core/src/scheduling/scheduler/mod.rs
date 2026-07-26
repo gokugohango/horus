@@ -1758,8 +1758,7 @@ impl Scheduler {
 
         // Record the registry version at graph-build time so we can detect
         // new topic registrations after the first tick cycle.
-        self.graph_registry_version =
-            crate::communication::topic_node_registry().version();
+        self.graph_registry_version = crate::communication::topic_node_registry().version();
 
         // Register param change callback — routes RuntimeParams changes to node callbacks.
         // The callback is registered once at init. When params.set() is called (from any
@@ -2221,52 +2220,58 @@ impl Scheduler {
                 // robot). Rebuild the graph from the reduced main-node set so its
                 // indices are consistent with `self.nodes`.
                 self.build_dependency_graph();
-                self.graph_registry_version =
-                    crate::communication::topic_node_registry().version();
+                self.graph_registry_version = crate::communication::topic_node_registry().version();
 
                 // Create live SHM registry and register all nodes
-                let arc_registry = match super::registry::SchedulerRegistry::open(&self.scheduler_name) {
-                    Ok(reg) => {
-                        // Register all nodes across all execution groups
-                        let all_node_groups: Vec<&[super::types::RegisteredNode]> = vec![
-                            &self.nodes,
-                            &groups.rt_nodes,
-                            &groups.compute_nodes,
-                            &groups.event_nodes,
-                            &groups.async_io_nodes,
-                        ];
-                        for nodes in all_node_groups {
-                            for node in nodes {
-                                let exec_class = match node.execution_class {
-                                    crate::scheduling::types::ExecutionClass::Rt => 0,
-                                    crate::scheduling::types::ExecutionClass::Compute => 1,
-                                    crate::scheduling::types::ExecutionClass::Event(_) => 2,
-                                    crate::scheduling::types::ExecutionClass::AsyncIo => 3,
-                                    crate::scheduling::types::ExecutionClass::BestEffort => 4,
-                                };
-                                let rate = node.rate_hz.unwrap_or(0.0);
-                                let slot = reg.register_node(
-                                    &node.name,
-                                    node.priority as u8,
-                                    rate,
-                                    exec_class,
-                                );
-                                self.registry_slots.insert(node.name.to_string(), slot);
+                let arc_registry =
+                    match super::registry::SchedulerRegistry::open(&self.scheduler_name) {
+                        Ok(reg) => {
+                            // Register all nodes across all execution groups
+                            let all_node_groups: Vec<&[super::types::RegisteredNode]> = vec![
+                                &self.nodes,
+                                &groups.rt_nodes,
+                                &groups.compute_nodes,
+                                &groups.event_nodes,
+                                &groups.async_io_nodes,
+                            ];
+                            for nodes in all_node_groups {
+                                for node in nodes {
+                                    let exec_class = match node.execution_class {
+                                        crate::scheduling::types::ExecutionClass::Rt => 0,
+                                        crate::scheduling::types::ExecutionClass::Compute => 1,
+                                        crate::scheduling::types::ExecutionClass::Event(_) => 2,
+                                        crate::scheduling::types::ExecutionClass::AsyncIo => 3,
+                                        crate::scheduling::types::ExecutionClass::BestEffort => 4,
+                                    };
+                                    let rate = node.rate_hz.unwrap_or(0.0);
+                                    let slot = reg.register_node(
+                                        &node.name,
+                                        node.priority as u8,
+                                        rate,
+                                        exec_class,
+                                    );
+                                    self.registry_slots.insert(node.name.to_string(), slot);
+                                }
                             }
+                            Some(Arc::new(reg))
                         }
-                        Some(Arc::new(reg))
-                    }
-                    Err(e) => {
-                        log::warn!("Failed to create SHM registry: {}", e);
-                        None
-                    }
-                };
+                        Err(e) => {
+                            log::warn!("Failed to create SHM registry: {}", e);
+                            None
+                        }
+                    };
                 let arc_slots = Arc::new(self.registry_slots.clone());
 
                 // Node control map for cross-thread pause/stop commands
                 let arc_controls = Arc::new(super::types::NodeControlMap::default());
                 // Register all nodes in the control map
-                for nodes in [&self.nodes as &[_], &groups.rt_nodes, &groups.compute_nodes, &groups.event_nodes, &groups.async_io_nodes] {
+                for nodes in [
+                    &self.nodes as &[_],
+                    &groups.rt_nodes,
+                    &groups.compute_nodes,
+                    &groups.event_nodes,
+                    &groups.async_io_nodes,
+                ] {
                     for node in nodes {
                         arc_controls.register(&node.name);
                     }
@@ -2278,7 +2283,8 @@ impl Scheduler {
                 self.control_topic = crate::communication::Topic::new_with_kind(
                     &ctl_topic_name,
                     crate::communication::TopicKind::System as u8,
-                ).ok();
+                )
+                .ok();
 
                 // Shared monitors for all executor threads
                 let shared_monitors = super::types::SharedMonitors {
@@ -2804,10 +2810,11 @@ impl Scheduler {
                                 // safing callback panics it did NOT reach a safe state,
                                 // so stop it and trigger a system emergency stop.
                                 let node = &mut registered.node;
-                                let panicked = std::panic::catch_unwind(
-                                    std::panic::AssertUnwindSafe(|| node.enter_safe_state()),
-                                )
-                                .is_err();
+                                let panicked =
+                                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                                        node.enter_safe_state()
+                                    }))
+                                    .is_err();
                                 if panicked {
                                     registered.is_stopped = true;
                                     print_line(&format!(
@@ -3825,8 +3832,9 @@ impl Scheduler {
                 if let Some(action) = stale_action {
                     match action {
                         super::types::StalePolicy::SafeState => {
-                            let panicked =
-                                Self::guard_fault_callback(|| self.nodes[i].node.enter_safe_state());
+                            let panicked = Self::guard_fault_callback(|| {
+                                self.nodes[i].node.enter_safe_state()
+                            });
                             if panicked {
                                 self.note_safing_failure(i, "enter_safe_state");
                             }
@@ -4175,10 +4183,7 @@ impl Scheduler {
             }
             clear_node_context();
 
-            print_line(&format!(
-                " Node '{}' failed: {}",
-                node_name, error_msg
-            ));
+            print_line(&format!(" Node '{}' failed: {}", node_name, error_msg));
             context.transition_to_error(error_msg);
         }
 
@@ -4360,9 +4365,7 @@ impl Scheduler {
 
         // Seed: all ticking nodes with adjusted pending == 0
         for i in 0..n {
-            if should_tick[i]
-                && pending[i].load(std::sync::atomic::Ordering::Relaxed) == 0
-            {
+            if should_tick[i] && pending[i].load(std::sync::atomic::Ordering::Relaxed) == 0 {
                 let _ = ready_tx.send(i);
             }
         }
@@ -4420,9 +4423,7 @@ impl Scheduler {
 
                 s.spawn(move |_| {
                     loop {
-                        if completed.load(std::sync::atomic::Ordering::Acquire)
-                            >= total_to_tick
-                        {
+                        if completed.load(std::sync::atomic::Ordering::Acquire) >= total_to_tick {
                             break;
                         }
 
@@ -4471,15 +4472,14 @@ impl Scheduler {
                             if !should_tick[succ] {
                                 continue;
                             }
-                            let prev = pending[succ]
-                                .fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+                            let prev =
+                                pending[succ].fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
                             if prev == 1 {
                                 let _ = ready_tx.send(succ);
                             }
                         }
 
-                        completed
-                            .fetch_add(1, std::sync::atomic::Ordering::Release);
+                        completed.fetch_add(1, std::sync::atomic::Ordering::Release);
                     }
                 });
             }

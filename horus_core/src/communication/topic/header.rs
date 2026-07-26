@@ -993,7 +993,12 @@ mod tests {
     /// `detect_optimal_backend` exercises the heap/intra topology tree rather
     /// than the `shm_backed` (creator_pid != 0) short-circuit that always routes
     /// to SHM backends. `init()` unconditionally stamps the creator PID.
-    fn make_inmem_header(type_size: u32, type_align: u32, is_pod: bool, capacity: u32) -> TopicHeader {
+    fn make_inmem_header(
+        type_size: u32,
+        type_align: u32,
+        is_pod: bool,
+        capacity: u32,
+    ) -> TopicHeader {
         let mut h = make_header(type_size, type_align, is_pod, capacity);
         h.creator_pid = 0;
         h

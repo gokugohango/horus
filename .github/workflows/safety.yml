@@ -55,7 +55,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       # Run MIRI on core modules with unsafe code
       - name: MIRI - horus_core memory module (unit tests)
@@ -102,7 +102,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       - name: Run Tests with AddressSanitizer
         run: |
@@ -134,7 +134,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       - name: Run Concurrent Tests with ThreadSanitizer
         run: |

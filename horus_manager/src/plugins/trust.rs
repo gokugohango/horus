@@ -105,7 +105,10 @@ impl TrustStore {
     pub fn save(&self, path: &Path) -> Result<()> {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).with_context(|| {
-                format!("failed to create trust store directory {}", parent.display())
+                format!(
+                    "failed to create trust store directory {}",
+                    parent.display()
+                )
             })?;
         }
         let content = serde_json::to_string_pretty(self)?;
@@ -201,7 +204,11 @@ mod tests {
 
         let mut store = TrustStore::default();
         store
-            .trust("sha256:deadbeef", "nav2", Path::new("/proj/.horus/bin/horus-nav2"))
+            .trust(
+                "sha256:deadbeef",
+                "nav2",
+                Path::new("/proj/.horus/bin/horus-nav2"),
+            )
             .unwrap();
         assert!(store.contains("sha256:deadbeef"));
         assert!(!store.contains("sha256:other"));

@@ -389,7 +389,12 @@ mod tests {
         use std::time::{Duration, Instant};
 
         // Echo handler: response bytes = request bytes.
-        extern "C" fn echo(req: *const u8, req_len: usize, res: *mut u8, res_len: *mut usize) -> bool {
+        extern "C" fn echo(
+            req: *const u8,
+            req_len: usize,
+            res: *mut u8,
+            res_len: *mut usize,
+        ) -> bool {
             unsafe {
                 std::ptr::copy_nonoverlapping(req, res, req_len);
                 *res_len = req_len;
@@ -406,7 +411,8 @@ mod tests {
 
         // service_client_call blocks polling for its response, so run it on a
         // thread and drive the server from here.
-        let call = std::thread::spawn(move || service_client_call(&client, r#"{"ping":1}"#, 3_000_000));
+        let call =
+            std::thread::spawn(move || service_client_call(&client, r#"{"ping":1}"#, 3_000_000));
 
         let deadline = Instant::now() + Duration::from_secs(4);
         while !call.is_finished() {
@@ -419,7 +425,10 @@ mod tests {
 
         let resp = call.join().unwrap();
         assert!(resp.is_ok(), "service call should be answered: {resp:?}");
-        assert!(resp.unwrap().contains("ping"), "response should echo the request");
+        assert!(
+            resp.unwrap().contains("ping"),
+            "response should echo the request"
+        );
     }
 
     // F1 regression: the FFI must advertise the real output-buffer capacity to

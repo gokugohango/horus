@@ -58,9 +58,7 @@ impl PeerTable {
         let miss_threshold = std::env::var("HORUS_NET_DISCOVERY_MISSES")
             .ok()
             .and_then(|v| v.parse().ok())
-            .unwrap_or_else(|| {
-                if super::config::is_wsl2() { 6 } else { 3 }
-            });
+            .unwrap_or_else(|| if super::config::is_wsl2() { 6 } else { 3 });
 
         Self {
             peers: HashMap::new(),

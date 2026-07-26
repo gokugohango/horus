@@ -38,7 +38,9 @@ pub(super) fn set_realtime_priority(_priority: i32) -> anyhow::Result<()> {
     // applied while the thread actually runs at normal priority. macOS is a
     // dev-only target for robotics (production hard-RT is Linux). See the
     // stub audit 2026-07-13.
-    anyhow::bail!("macOS real-time scheduling (THREAD_TIME_CONSTRAINT_POLICY) is not yet implemented")
+    anyhow::bail!(
+        "macOS real-time scheduling (THREAD_TIME_CONSTRAINT_POLICY) is not yet implemented"
+    )
 }
 
 /// Lock memory on macOS.

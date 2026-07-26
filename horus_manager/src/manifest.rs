@@ -915,10 +915,8 @@ impl HorusManifest {
             "{}.tmp",
             path.file_name().and_then(|n| n.to_str()).unwrap_or("toml")
         ));
-        fs::write(&tmp, &content)
-            .with_context(|| format!("Failed to write {}", tmp.display()))?;
-        fs::rename(&tmp, path)
-            .with_context(|| format!("Failed to persist {}", path.display()))?;
+        fs::write(&tmp, &content).with_context(|| format!("Failed to write {}", tmp.display()))?;
+        fs::rename(&tmp, path).with_context(|| format!("Failed to persist {}", path.display()))?;
         Ok(())
     }
 
@@ -1231,7 +1229,13 @@ pub fn upsert_manifest_entry<T: Serialize>(
     let tbl = root
         .get_mut(table)
         .and_then(|it| it.as_table_mut())
-        .ok_or_else(|| anyhow!("`[{}]` in {} is not a table; cannot edit", table, path.display()))?;
+        .ok_or_else(|| {
+            anyhow!(
+                "`[{}]` in {} is not a table; cannot edit",
+                table,
+                path.display()
+            )
+        })?;
     // Update in place when the key already exists — replacing only the value
     // slot keeps the existing key's leading decor (comments/blank lines).
     // `Table::insert` would instead reset that decor, so it is only used to

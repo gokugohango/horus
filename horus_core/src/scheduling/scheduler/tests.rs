@@ -157,8 +157,7 @@ fn fault_path_callback_panic_is_isolated() {
     // tick() panic is caught by design; on_error() then panics. Pre-fix that second
     // panic escapes handle_tick_failure -> process_tick_result -> tick_once(),
     // unwinding the whole loop. Post-fix it is caught and the scheduler continues.
-    let result =
-        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| scheduler.tick_once()));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| scheduler.tick_once()));
     assert!(
         result.is_ok(),
         "on_error() panic must be isolated — it unwound the scheduler tick loop"
@@ -188,7 +187,10 @@ fn note_safing_failure_escalates_to_estop_for_critical_node() {
     s.finalize_and_init();
 
     let monitor = s.monitor.safety.as_ref().expect("safety monitor enabled");
-    assert!(monitor.is_critical_node("crit_node"), "node must be critical");
+    assert!(
+        monitor.is_critical_node("crit_node"),
+        "node must be critical"
+    );
     assert!(!monitor.is_emergency_stop(), "no e-stop before the failure");
 
     let idx = s
@@ -198,7 +200,10 @@ fn note_safing_failure_escalates_to_estop_for_critical_node() {
         .expect("critical node present in nodes");
     s.note_safing_failure(idx, "enter_safe_state");
 
-    assert!(s.nodes[idx].is_stopped, "node that failed to safe is stopped");
+    assert!(
+        s.nodes[idx].is_stopped,
+        "node that failed to safe is stopped"
+    );
     assert!(
         s.monitor.safety.as_ref().unwrap().is_emergency_stop(),
         "a critical node that cannot reach a safe state must trigger a system emergency stop"
@@ -219,7 +224,9 @@ fn external_emergency_stop_latches_scheduler_after_finalize() {
         }
         fn tick(&mut self) {}
     }
-    let mut s = Scheduler::new().tick_rate(100_u64.hz()).watchdog(500_u64.ms());
+    let mut s = Scheduler::new()
+        .tick_rate(100_u64.hz())
+        .watchdog(500_u64.ms());
     s.add(N).watchdog(100_u64.ms()).build().unwrap();
     // finalize_and_init() runs finalize_config(), which installs the external
     // emergency-stop hook (SCHED-H1) — mirrors what run() does before the tick loop.
@@ -272,7 +279,10 @@ fn note_safing_failure_stops_noncritical_node_without_estop() {
         .expect("node present in nodes");
     s.note_safing_failure(idx, "enter_safe_state");
 
-    assert!(s.nodes[idx].is_stopped, "node that failed to safe is stopped");
+    assert!(
+        s.nodes[idx].is_stopped,
+        "node that failed to safe is stopped"
+    );
     assert!(
         !s.monitor.safety.as_ref().unwrap().is_emergency_stop(),
         "a non-critical node failing to safe must NOT trigger a system emergency stop"
@@ -3971,13 +3981,25 @@ fn test_ready_dispatch_diamond_topology() {
 
     let mut scheduler = Scheduler::new().tick_rate(5_u64.hz());
     scheduler
-        .add(TimingNode::new("rd_dia_A", 20, ts.clone()).publishes("rd_dia_ab").publishes("rd_dia_ac"))
+        .add(
+            TimingNode::new("rd_dia_A", 20, ts.clone())
+                .publishes("rd_dia_ab")
+                .publishes("rd_dia_ac"),
+        )
         .build();
     scheduler
-        .add(TimingNode::new("rd_dia_B", 40, ts.clone()).subscribes("rd_dia_ab").publishes("rd_dia_bd"))
+        .add(
+            TimingNode::new("rd_dia_B", 40, ts.clone())
+                .subscribes("rd_dia_ab")
+                .publishes("rd_dia_bd"),
+        )
         .build();
     scheduler
-        .add(TimingNode::new("rd_dia_C", 40, ts.clone()).subscribes("rd_dia_ac").publishes("rd_dia_cd"))
+        .add(
+            TimingNode::new("rd_dia_C", 40, ts.clone())
+                .subscribes("rd_dia_ac")
+                .publishes("rd_dia_cd"),
+        )
         .build();
     scheduler
         .add(
@@ -3990,7 +4012,11 @@ fn test_ready_dispatch_diamond_topology() {
     scheduler.run_for(250_u64.ms());
 
     let log = ts.lock().unwrap();
-    assert!(log.len() >= 4, "Expected all 4 nodes to tick, got {}", log.len());
+    assert!(
+        log.len() >= 4,
+        "Expected all 4 nodes to tick, got {}",
+        log.len()
+    );
 
     // A before B and C
     assert_ordered(&log, "rd_dia_A", "rd_dia_B");
@@ -4414,10 +4440,13 @@ fn test_ready_dispatch_graph_rebuild_after_tick_one() {
 
 /// Register a node as publisher/subscriber with the global TopicNodeRegistry.
 /// Simulates what Topic::send() and Topic::recv() do internally.
-fn register_topic(node_name: &str, topic_name: &str, role: crate::communication::topic::NodeTopicRole) {
-    crate::communication::topic_node_registry().register_with_type(
-        topic_name, node_name, role, "f64",
-    );
+fn register_topic(
+    node_name: &str,
+    topic_name: &str,
+    role: crate::communication::topic::NodeTopicRole,
+) {
+    crate::communication::topic_node_registry()
+        .register_with_type(topic_name, node_name, role, "f64");
 }
 
 // ── Test 1: Warehouse Robot — 4 Independent Sensors ──────────────────────────
@@ -4445,32 +4474,52 @@ fn test_robotics_warehouse_4_independent_sensors() {
     }
 
     impl Node for SensorNode {
-        fn name(&self) -> &str { &self.name }
+        fn name(&self) -> &str {
+            &self.name
+        }
         fn init(&mut self) -> crate::error::HorusResult<()> {
-            register_topic(&self.name, &self.topic, crate::communication::topic::NodeTopicRole::Publisher);
+            register_topic(
+                &self.name,
+                &self.topic,
+                crate::communication::topic::NodeTopicRole::Publisher,
+            );
             Ok(())
         }
         fn tick(&mut self) {
             let start = std::time::Instant::now();
             std::thread::sleep(Duration::from_millis(self.sleep_ms));
             let end = std::time::Instant::now();
-            self.ts.lock().unwrap().push((self.name.clone(), start, end));
+            self.ts
+                .lock()
+                .unwrap()
+                .push((self.name.clone(), start, end));
         }
     }
 
-    for (name, topic) in [("wh_lidar", "wh_scan"), ("wh_camera", "wh_image"), ("wh_imu", "wh_imu_data"), ("wh_encoder", "wh_odom")] {
-        scheduler.add(SensorNode {
-            name: name.to_string(),
-            topic: topic.to_string(),
-            sleep_ms: 20,
-            ts: ts.clone(),
-        }).build();
+    for (name, topic) in [
+        ("wh_lidar", "wh_scan"),
+        ("wh_camera", "wh_image"),
+        ("wh_imu", "wh_imu_data"),
+        ("wh_encoder", "wh_odom"),
+    ] {
+        scheduler
+            .add(SensorNode {
+                name: name.to_string(),
+                topic: topic.to_string(),
+                sleep_ms: 20,
+                ts: ts.clone(),
+            })
+            .build();
     }
 
     scheduler.run_for(250_u64.ms());
 
     let log = ts.lock().unwrap();
-    assert!(log.len() >= 4, "All 4 sensors should tick, got {}", log.len());
+    assert!(
+        log.len() >= 4,
+        "All 4 sensors should tick, got {}",
+        log.len()
+    );
 
     // Prove parallelism: measure the first batch span
     let first_four: Vec<_> = log.iter().take(4).collect();
@@ -4514,13 +4563,23 @@ fn test_robotics_surgical_safety_pipeline() {
     }
 
     impl Node for PipelineNode {
-        fn name(&self) -> &str { &self.name }
+        fn name(&self) -> &str {
+            &self.name
+        }
         fn init(&mut self) -> crate::error::HorusResult<()> {
             for t in &self.pubs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Publisher);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Publisher,
+                );
             }
             for t in &self.subs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Subscriber);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Subscriber,
+                );
             }
             Ok(())
         }
@@ -4528,41 +4587,65 @@ fn test_robotics_surgical_safety_pipeline() {
             let start = std::time::Instant::now();
             std::thread::sleep(Duration::from_millis(self.sleep_ms));
             let end = std::time::Instant::now();
-            self.ts.lock().unwrap().push((self.name.clone(), start, end));
+            self.ts
+                .lock()
+                .unwrap()
+                .push((self.name.clone(), start, end));
         }
     }
 
     let mut scheduler = Scheduler::new().tick_rate(3_u64.hz());
 
     // NO .order() calls — dependency graph handles everything
-    scheduler.add(PipelineNode {
-        name: "sr_force".into(), pubs: vec!["sr_force_data".into()], subs: vec![],
-        sleep_ms: 15, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(PipelineNode {
+            name: "sr_force".into(),
+            pubs: vec!["sr_force_data".into()],
+            subs: vec![],
+            sleep_ms: 15,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(PipelineNode {
-        name: "sr_vision".into(), pubs: vec!["sr_vision_data".into()], subs: vec![],
-        sleep_ms: 40, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(PipelineNode {
+            name: "sr_vision".into(),
+            pubs: vec!["sr_vision_data".into()],
+            subs: vec![],
+            sleep_ms: 40,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(PipelineNode {
-        name: "sr_safety".into(),
-        pubs: vec!["sr_safe_cmd".into()],
-        subs: vec!["sr_force_data".into(), "sr_vision_data".into()],
-        sleep_ms: 5, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(PipelineNode {
+            name: "sr_safety".into(),
+            pubs: vec!["sr_safe_cmd".into()],
+            subs: vec!["sr_force_data".into(), "sr_vision_data".into()],
+            sleep_ms: 5,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(PipelineNode {
-        name: "sr_ctrl".into(),
-        pubs: vec!["sr_joint_cmd".into()],
-        subs: vec!["sr_safe_cmd".into()],
-        sleep_ms: 10, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(PipelineNode {
+            name: "sr_ctrl".into(),
+            pubs: vec!["sr_joint_cmd".into()],
+            subs: vec!["sr_safe_cmd".into()],
+            sleep_ms: 10,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(PipelineNode {
-        name: "sr_actuator".into(), pubs: vec![], subs: vec!["sr_joint_cmd".into()],
-        sleep_ms: 5, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(PipelineNode {
+            name: "sr_actuator".into(),
+            pubs: vec![],
+            subs: vec!["sr_joint_cmd".into()],
+            sleep_ms: 5,
+            ts: ts.clone(),
+        })
+        .build();
 
     scheduler.run_for(400_u64.ms());
 
@@ -4609,13 +4692,23 @@ fn test_robotics_autonomous_car_perception() {
     }
 
     impl Node for CarNode {
-        fn name(&self) -> &str { &self.name }
+        fn name(&self) -> &str {
+            &self.name
+        }
         fn init(&mut self) -> crate::error::HorusResult<()> {
             for t in &self.pubs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Publisher);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Publisher,
+                );
             }
             for t in &self.subs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Subscriber);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Subscriber,
+                );
             }
             Ok(())
         }
@@ -4623,7 +4716,10 @@ fn test_robotics_autonomous_car_perception() {
             let start = std::time::Instant::now();
             std::thread::sleep(Duration::from_millis(self.sleep_ms));
             let end = std::time::Instant::now();
-            self.ts.lock().unwrap().push((self.name.clone(), start, end));
+            self.ts
+                .lock()
+                .unwrap()
+                .push((self.name.clone(), start, end));
         }
     }
 
@@ -4637,10 +4733,15 @@ fn test_robotics_autonomous_car_perception() {
         ("ac_lidar", "ac_cloud", 20),
         ("ac_radar", "ac_radar_pts", 10),
     ] {
-        scheduler.add(CarNode {
-            name: name.into(), pubs: vec![topic.into()], subs: vec![],
-            sleep_ms: ms, ts: ts.clone(),
-        }).build();
+        scheduler
+            .add(CarNode {
+                name: name.into(),
+                pubs: vec![topic.into()],
+                subs: vec![],
+                sleep_ms: ms,
+                ts: ts.clone(),
+            })
+            .build();
     }
 
     // Layer 2: 5 detectors (each depends on one sensor, parallel with each other)
@@ -4651,31 +4752,53 @@ fn test_robotics_autonomous_car_perception() {
         ("ac_pc_proc", "ac_pc_out", "ac_cloud", 30),
         ("ac_radar_proc", "ac_radar_out", "ac_radar_pts", 15),
     ] {
-        scheduler.add(CarNode {
-            name: name.into(), pubs: vec![pub_t.into()], subs: vec![sub_t.into()],
-            sleep_ms: ms, ts: ts.clone(),
-        }).build();
+        scheduler
+            .add(CarNode {
+                name: name.into(),
+                pubs: vec![pub_t.into()],
+                subs: vec![sub_t.into()],
+                sleep_ms: ms,
+                ts: ts.clone(),
+            })
+            .build();
     }
 
     // Layer 3: Fusion planner (depends on ALL detectors)
-    scheduler.add(CarNode {
-        name: "ac_planner".into(),
-        pubs: vec!["ac_plan".into()],
-        subs: vec!["ac_front_det_out".into(), "ac_left_det_out".into(),
-                    "ac_right_det_out".into(), "ac_pc_out".into(), "ac_radar_out".into()],
-        sleep_ms: 15, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(CarNode {
+            name: "ac_planner".into(),
+            pubs: vec!["ac_plan".into()],
+            subs: vec![
+                "ac_front_det_out".into(),
+                "ac_left_det_out".into(),
+                "ac_right_det_out".into(),
+                "ac_pc_out".into(),
+                "ac_radar_out".into(),
+            ],
+            sleep_ms: 15,
+            ts: ts.clone(),
+        })
+        .build();
 
     // Layer 4: Vehicle controller
-    scheduler.add(CarNode {
-        name: "ac_vehicle_ctrl".into(), pubs: vec![], subs: vec!["ac_plan".into()],
-        sleep_ms: 5, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(CarNode {
+            name: "ac_vehicle_ctrl".into(),
+            pubs: vec![],
+            subs: vec!["ac_plan".into()],
+            sleep_ms: 5,
+            ts: ts.clone(),
+        })
+        .build();
 
     scheduler.run_for(600_u64.ms());
 
     let log = ts.lock().unwrap();
-    assert!(log.len() >= 12, "All 12 nodes should tick, got {}", log.len());
+    assert!(
+        log.len() >= 12,
+        "All 12 nodes should tick, got {}",
+        log.len()
+    );
 
     // Layer 1: all 5 sensors run in parallel
     assert_parallel(&log, "ac_front_cam", "ac_lidar");
@@ -4738,13 +4861,23 @@ fn test_robotics_factory_independent_arms() {
     }
 
     impl Node for ArmNode {
-        fn name(&self) -> &str { &self.name }
+        fn name(&self) -> &str {
+            &self.name
+        }
         fn init(&mut self) -> crate::error::HorusResult<()> {
             for t in &self.pubs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Publisher);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Publisher,
+                );
             }
             for t in &self.subs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Subscriber);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Subscriber,
+                );
             }
             Ok(())
         }
@@ -4752,7 +4885,10 @@ fn test_robotics_factory_independent_arms() {
             let start = std::time::Instant::now();
             std::thread::sleep(Duration::from_millis(self.sleep_ms));
             let end = std::time::Instant::now();
-            self.ts.lock().unwrap().push((self.name.clone(), start, end));
+            self.ts
+                .lock()
+                .unwrap()
+                .push((self.name.clone(), start, end));
         }
     }
 
@@ -4761,22 +4897,33 @@ fn test_robotics_factory_independent_arms() {
     // 3 arms, each with sensor → controller → motor (completely independent chains)
     for arm_id in 1..=3 {
         let prefix = format!("fa_arm{}", arm_id);
-        scheduler.add(ArmNode {
-            name: format!("{}_sensor", prefix),
-            pubs: vec![format!("{}_joint_state", prefix)], subs: vec![],
-            sleep_ms: 15, ts: ts.clone(),
-        }).build();
-        scheduler.add(ArmNode {
-            name: format!("{}_ctrl", prefix),
-            pubs: vec![format!("{}_joint_cmd", prefix)],
-            subs: vec![format!("{}_joint_state", prefix)],
-            sleep_ms: 15, ts: ts.clone(),
-        }).build();
-        scheduler.add(ArmNode {
-            name: format!("{}_motor", prefix),
-            pubs: vec![], subs: vec![format!("{}_joint_cmd", prefix)],
-            sleep_ms: 10, ts: ts.clone(),
-        }).build();
+        scheduler
+            .add(ArmNode {
+                name: format!("{}_sensor", prefix),
+                pubs: vec![format!("{}_joint_state", prefix)],
+                subs: vec![],
+                sleep_ms: 15,
+                ts: ts.clone(),
+            })
+            .build();
+        scheduler
+            .add(ArmNode {
+                name: format!("{}_ctrl", prefix),
+                pubs: vec![format!("{}_joint_cmd", prefix)],
+                subs: vec![format!("{}_joint_state", prefix)],
+                sleep_ms: 15,
+                ts: ts.clone(),
+            })
+            .build();
+        scheduler
+            .add(ArmNode {
+                name: format!("{}_motor", prefix),
+                pubs: vec![],
+                subs: vec![format!("{}_joint_cmd", prefix)],
+                sleep_ms: 10,
+                ts: ts.clone(),
+            })
+            .build();
     }
 
     scheduler.run_for(400_u64.ms());
@@ -4787,8 +4934,16 @@ fn test_robotics_factory_independent_arms() {
     // Within each arm: causal ordering maintained
     for arm_id in 1..=3 {
         let prefix = format!("fa_arm{}", arm_id);
-        assert_ordered(&log, &format!("{}_sensor", prefix), &format!("{}_ctrl", prefix));
-        assert_ordered(&log, &format!("{}_ctrl", prefix), &format!("{}_motor", prefix));
+        assert_ordered(
+            &log,
+            &format!("{}_sensor", prefix),
+            &format!("{}_ctrl", prefix),
+        );
+        assert_ordered(
+            &log,
+            &format!("{}_ctrl", prefix),
+            &format!("{}_motor", prefix),
+        );
     }
 
     // Across arms: sensors run in parallel (different arms are independent)
@@ -4841,13 +4996,23 @@ fn test_robotics_drone_fast_imu_slow_camera() {
     }
 
     impl Node for DroneNode {
-        fn name(&self) -> &str { &self.name }
+        fn name(&self) -> &str {
+            &self.name
+        }
         fn init(&mut self) -> crate::error::HorusResult<()> {
             for t in &self.pubs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Publisher);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Publisher,
+                );
             }
             for t in &self.subs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Subscriber);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Subscriber,
+                );
             }
             Ok(())
         }
@@ -4855,33 +5020,54 @@ fn test_robotics_drone_fast_imu_slow_camera() {
             let start = std::time::Instant::now();
             std::thread::sleep(Duration::from_millis(self.sleep_ms));
             let end = std::time::Instant::now();
-            self.ts.lock().unwrap().push((self.name.clone(), start, end));
+            self.ts
+                .lock()
+                .unwrap()
+                .push((self.name.clone(), start, end));
         }
     }
 
     let mut scheduler = Scheduler::new().tick_rate(3_u64.hz());
 
-    scheduler.add(DroneNode {
-        name: "dr_imu".into(), pubs: vec!["dr_imu_data".into()], subs: vec![],
-        sleep_ms: 2, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(DroneNode {
+            name: "dr_imu".into(),
+            pubs: vec!["dr_imu_data".into()],
+            subs: vec![],
+            sleep_ms: 2,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(DroneNode {
-        name: "dr_camera".into(), pubs: vec!["dr_image".into()], subs: vec![],
-        sleep_ms: 40, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(DroneNode {
+            name: "dr_camera".into(),
+            pubs: vec!["dr_image".into()],
+            subs: vec![],
+            sleep_ms: 40,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(DroneNode {
-        name: "dr_nav".into(),
-        pubs: vec!["dr_nav_cmd".into()],
-        subs: vec!["dr_imu_data".into(), "dr_image".into()],
-        sleep_ms: 10, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(DroneNode {
+            name: "dr_nav".into(),
+            pubs: vec!["dr_nav_cmd".into()],
+            subs: vec!["dr_imu_data".into(), "dr_image".into()],
+            sleep_ms: 10,
+            ts: ts.clone(),
+        })
+        .build();
 
-    scheduler.add(DroneNode {
-        name: "dr_motors".into(), pubs: vec![], subs: vec!["dr_nav_cmd".into()],
-        sleep_ms: 2, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(DroneNode {
+            name: "dr_motors".into(),
+            pubs: vec![],
+            subs: vec!["dr_nav_cmd".into()],
+            sleep_ms: 2,
+            ts: ts.clone(),
+        })
+        .build();
 
     scheduler.run_for(300_u64.ms());
 
@@ -4925,13 +5111,23 @@ fn test_robotics_no_order_random_add_sequence() {
     }
 
     impl Node for SimpleNode {
-        fn name(&self) -> &str { &self.name }
+        fn name(&self) -> &str {
+            &self.name
+        }
         fn init(&mut self) -> crate::error::HorusResult<()> {
             for t in &self.pubs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Publisher);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Publisher,
+                );
             }
             for t in &self.subs {
-                register_topic(&self.name, t, crate::communication::topic::NodeTopicRole::Subscriber);
+                register_topic(
+                    &self.name,
+                    t,
+                    crate::communication::topic::NodeTopicRole::Subscriber,
+                );
             }
             Ok(())
         }
@@ -4939,33 +5135,61 @@ fn test_robotics_no_order_random_add_sequence() {
             let start = std::time::Instant::now();
             std::thread::sleep(Duration::from_millis(self.sleep_ms));
             let end = std::time::Instant::now();
-            self.ts.lock().unwrap().push((self.name.clone(), start, end));
+            self.ts
+                .lock()
+                .unwrap()
+                .push((self.name.clone(), start, end));
         }
     }
 
     let mut scheduler = Scheduler::new().tick_rate(3_u64.hz());
 
     // Added in deliberately WRONG order — no .order() calls
-    scheduler.add(SimpleNode {
-        name: "ro_E".into(), pubs: vec![], subs: vec!["ro_cmd".into()],
-        sleep_ms: 5, ts: ts.clone(),
-    }).build();
-    scheduler.add(SimpleNode {
-        name: "ro_C".into(), pubs: vec!["ro_plan".into()], subs: vec!["ro_scan".into()],
-        sleep_ms: 15, ts: ts.clone(),
-    }).build();
-    scheduler.add(SimpleNode {
-        name: "ro_A".into(), pubs: vec!["ro_scan".into()], subs: vec![],
-        sleep_ms: 10, ts: ts.clone(),
-    }).build();
-    scheduler.add(SimpleNode {
-        name: "ro_D".into(), pubs: vec!["ro_cmd".into()], subs: vec!["ro_plan".into()],
-        sleep_ms: 10, ts: ts.clone(),
-    }).build();
-    scheduler.add(SimpleNode {
-        name: "ro_B".into(), pubs: vec!["ro_scan".into()], subs: vec![],
-        sleep_ms: 10, ts: ts.clone(),
-    }).build();
+    scheduler
+        .add(SimpleNode {
+            name: "ro_E".into(),
+            pubs: vec![],
+            subs: vec!["ro_cmd".into()],
+            sleep_ms: 5,
+            ts: ts.clone(),
+        })
+        .build();
+    scheduler
+        .add(SimpleNode {
+            name: "ro_C".into(),
+            pubs: vec!["ro_plan".into()],
+            subs: vec!["ro_scan".into()],
+            sleep_ms: 15,
+            ts: ts.clone(),
+        })
+        .build();
+    scheduler
+        .add(SimpleNode {
+            name: "ro_A".into(),
+            pubs: vec!["ro_scan".into()],
+            subs: vec![],
+            sleep_ms: 10,
+            ts: ts.clone(),
+        })
+        .build();
+    scheduler
+        .add(SimpleNode {
+            name: "ro_D".into(),
+            pubs: vec!["ro_cmd".into()],
+            subs: vec!["ro_plan".into()],
+            sleep_ms: 10,
+            ts: ts.clone(),
+        })
+        .build();
+    scheduler
+        .add(SimpleNode {
+            name: "ro_B".into(),
+            pubs: vec!["ro_scan".into()],
+            subs: vec![],
+            sleep_ms: 10,
+            ts: ts.clone(),
+        })
+        .build();
 
     scheduler.run_for(300_u64.ms());
 

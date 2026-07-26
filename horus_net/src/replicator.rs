@@ -896,11 +896,14 @@ mod tests {
         let mut rep = test_replicator();
         let peer_id = [0x77; 16];
         let mut buf = [0u8; 4096];
-        let len =
-            crate::discovery::encode_announcement(&peer_id, 9100, &[0u8; 4], &[], &mut buf);
+        let len = crate::discovery::encode_announcement(&peer_id, 9100, &[0u8; 4], &[], &mut buf);
         let from: SocketAddr = "127.0.0.1:9100".parse().unwrap();
         rep.process_packet(&buf[..len], from);
-        assert_eq!(rep.peers.alive_count(), 1, "real announcement registers a peer");
+        assert_eq!(
+            rep.peers.alive_count(),
+            1,
+            "real announcement registers a peer"
+        );
     }
 
     #[test]

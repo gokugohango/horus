@@ -152,14 +152,14 @@
 //! | `.async_io()` | **AsyncIo** | Network calls, file I/O, logging (tokio pool, no RT impact) |
 //! | *(default)* | **BestEffort** | Diagnostics, telemetry (main thread, sequential) |
 //!
-//! See [`scheduling::node_builder`] for the full decision guide.
+//! See [`scheduling::NodeBuilder`] for the full decision guide.
 //!
 //! ### Key Message Types
 //!
 //! | Type | Description |
 //! |------|-------------|
 //! | `CmdVel` | 2D velocity (linear f32, angular f32) |
-//! | `Twist` | 6-DOF velocity ([f64;3] linear + angular) |
+//! | `Twist` | 6-DOF velocity (`[f64; 3]` linear + angular) |
 //! | `Pose2D` | 2D position + orientation |
 //! | `Imu` | Accelerometer + gyroscope + magnetometer |
 //! | `LaserScan` | 2D LiDAR scan |

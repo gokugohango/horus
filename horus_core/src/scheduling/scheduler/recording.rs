@@ -362,7 +362,10 @@ mod tests {
 
     #[test]
     fn period_falls_back_on_zero_ticks() {
-        assert_eq!(replay_tick_period_ns(1_000_000, Some(3_000_000), 0), DEFAULT);
+        assert_eq!(
+            replay_tick_period_ns(1_000_000, Some(3_000_000), 0),
+            DEFAULT
+        );
     }
 
     #[test]

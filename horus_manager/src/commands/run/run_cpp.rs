@@ -234,10 +234,7 @@ fn ensure_horus_cpp(release: bool) -> Result<(PathBuf, PathBuf)> {
 
     let include_dir = source.join("horus_cpp/include");
     if !include_dir.join("horus/horus.hpp").exists() {
-        bail!(
-            "horus_cpp headers not found at {}",
-            include_dir.display()
-        );
+        bail!("horus_cpp headers not found at {}", include_dir.display());
     }
 
     let profile_dir = if release { "release" } else { "debug" };
@@ -273,7 +270,10 @@ fn ensure_horus_cpp(release: bool) -> Result<(PathBuf, PathBuf)> {
     }
 
     if !lib_path.exists() {
-        bail!("horus_cpp built but {} was not produced", lib_path.display());
+        bail!(
+            "horus_cpp built but {} was not produced",
+            lib_path.display()
+        );
     }
 
     Ok((include_dir, lib_path))

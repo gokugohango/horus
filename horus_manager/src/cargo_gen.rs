@@ -167,7 +167,9 @@ fn write_driver_deps(
                 // as a normal dependency in [dependencies]. Skip terra entries.
                 if let Some(package) = &cfg.package {
                     // Registry package — version resolved at install time, emit as "*".
-                    added_crates.entry(package.clone()).or_insert((None, Vec::new()));
+                    added_crates
+                        .entry(package.clone())
+                        .or_insert((None, Vec::new()));
                 } else if let Some(crate_name) = &cfg.crate_name {
                     // CratesIo driver — add the crate, PRESERVING any pinned version.
                     // Previously the version was extracted then discarded, so a driver
@@ -236,7 +238,11 @@ fn write_bin_entry(cargo: &mut String, name: &str, path: &str) {
 /// promise. Skipped if the user declared serde themselves.
 fn write_implicit_deps(cargo: &mut String, manifest: &HorusManifest) {
     if !manifest.dependencies.contains_key("serde") {
-        writeln!(cargo, "serde = {{ version = \"1\", features = [\"derive\"] }}").unwrap();
+        writeln!(
+            cargo,
+            "serde = {{ version = \"1\", features = [\"derive\"] }}"
+        )
+        .unwrap();
     }
 }
 
@@ -781,10 +787,7 @@ fn generate_member_cargo(
         // otherwise leak into the member's Cargo.toml as bogus crates.io deps. The
         // single-package path (write_deps_section) already skips these; the member path
         // had diverged and did not.
-        if matches!(
-            dep.effective_source(),
-            DepSource::PyPI | DepSource::System
-        ) {
+        if matches!(dep.effective_source(), DepSource::PyPI | DepSource::System) {
             continue;
         }
 
@@ -2648,8 +2651,7 @@ mod tests {
         let members = vec![(PathBuf::from("crates/perception"), member)];
         generate_workspace(&root, dir.path(), &members).unwrap();
 
-        let content =
-            fs::read_to_string(dir.path().join(".horus/perception/Cargo.toml")).unwrap();
+        let content = fs::read_to_string(dir.path().join(".horus/perception/Cargo.toml")).unwrap();
         assert!(
             content.contains("serde = \"1.0\""),
             "crates.io dep should appear: {}",

@@ -161,7 +161,10 @@ impl<const CAP: usize> SpRing<CAP> {
 /// loss unrelated to the flag conversion. Ring-full backpressure is covered by the
 /// multi-thread stress tests, not this loom gate.
 fn run<const CAP: usize>(sends: u64) {
-    assert!(sends <= CAP as u64, "model is faithful only without slot reuse");
+    assert!(
+        sends <= CAP as u64,
+        "model is faithful only without slot reuse"
+    );
     let mut builder = loom::model::Builder::new();
     builder.preemption_bound = Some(3);
     builder.check(move || {
@@ -201,7 +204,11 @@ fn run<const CAP: usize>(sends: u64) {
         // the fix the flags are zero, mp_recv returns None immediately, and the
         // length assertion below fails — the gate.
         while let Some((v, pos)) = ring.mp_recv() {
-            assert_eq!(v, pos + 1, "torn/misdelivered on drain: value {v} at position {pos}");
+            assert_eq!(
+                v,
+                pos + 1,
+                "torn/misdelivered on drain: value {v} at position {pos}"
+            );
             got.push(pos);
         }
 
@@ -255,7 +262,10 @@ fn loom_sp_mp_cap4_three() {
 /// directly (the old, buggy `sync_local` behavior) and this goes RED — the second
 /// burst re-delivers positions the first already yielded.
 fn run_resync<const CAP: usize>(sends: u64) {
-    assert!(sends <= CAP as u64, "model is faithful only without slot reuse");
+    assert!(
+        sends <= CAP as u64,
+        "model is faithful only without slot reuse"
+    );
     let mut builder = loom::model::Builder::new();
     builder.preemption_bound = Some(3);
     builder.check(move || {

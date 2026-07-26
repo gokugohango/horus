@@ -726,7 +726,7 @@ where
         // (it noted a naive increment would double-count every tick). The
         // `metrics_counted` flag on the goal state makes the count idempotent.
         let goals = self.inner.goals.read();
-        for (_, state) in goals.iter() {
+        for state in goals.values() {
             let mut st = state.write();
             if st.status.is_terminal() && !st.metrics_counted {
                 if st.status.is_success() {
@@ -999,8 +999,16 @@ mod tests {
         // Later ticks must NOT re-count (the double-count the old stub feared).
         node.tick();
         node.tick();
-        assert_eq!(node.metrics().goals_succeeded, 1, "no double-count on later ticks");
-        assert_eq!(node.metrics().goals_failed, 1, "no double-count on later ticks");
+        assert_eq!(
+            node.metrics().goals_succeeded,
+            1,
+            "no double-count on later ticks"
+        );
+        assert_eq!(
+            node.metrics().goals_failed,
+            1,
+            "no double-count on later ticks"
+        );
     }
 
     /// F-ACT1: `ClientGoalHandle::await_result` must pump the client itself, so a

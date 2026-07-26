@@ -125,7 +125,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       # Build and test in separate steps to avoid crate-type collision
       # Exclude horus_py from workspace build/test — it requires Python dev headers
@@ -241,8 +241,11 @@ jobs:
       # Loom exhaustively explores all thread interleavings.
       # Tests use at most 3 threads with minimal operations to keep runtimes
       # tractable (seconds, not hours).
-      - name: Loom — ring buffers (horus_core)
-        run: cargo test -p horus_core --test loom_ring_buffers -- --nocapture
+      # `loom_ring_buffers` modelled the spsc/spmc/mpsc/mpmc_intra rings, which
+      # were deleted with the intra backends (3d7f279f). `loom_fanout` is the
+      # live successor: it models the shared seqlock protocol ShmFanoutRing uses.
+      - name: Loom — fanout seqlock (horus_core)
+        run: cargo test -p horus_core --test loom_fanout -- --nocapture
         env:
           RUST_LOG: loom=debug
 

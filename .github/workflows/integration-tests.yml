@@ -52,7 +52,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
           # Increase shared memory limits
           sudo sysctl -w kernel.shmmax=2147483648
           sudo sysctl -w kernel.shmall=2147483648
@@ -112,7 +112,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       - name: Build horus_manager
         run: cargo build -p horus_manager --release
@@ -131,9 +131,12 @@ jobs:
         run: |
           output=$($HORUS --help)
           echo "$output"
-          # Assert all documented subcommands appear in help
+          # Assert all documented subcommands appear in help.
+          # NOTE: there is no `pkg` command — package operations are top-level
+          # (install/uninstall/search/list/update/info). `hf` was renamed `frame`.
           for cmd in new run build test check clean monitor topic node param msg log \
-                     pkg deploy add remove plugin env cache record launch; do
+                     install uninstall search frame service action \
+                     deploy add remove plugin env cache record launch; do
             echo "$output" | grep -qw "$cmd" || { echo "FAIL: subcommand '$cmd' missing from --help"; exit 1; }
           done
           echo "PASS: all core subcommands present in --help"
@@ -145,8 +148,9 @@ jobs:
         run: |
           PASS=0
           FAIL=0
-          for cmd in new run build test check clean monitor topic node param hf msg \
-                     log pkg deploy add remove plugin env cache record launch; do
+          for cmd in new run build test check clean monitor topic node param frame msg \
+                     log install uninstall search deploy add remove plugin env \
+                     cache record launch; do
             if $HORUS $cmd --help > /tmp/help_out 2>&1; then
               if grep -qiE "usage|Usage" /tmp/help_out; then
                 PASS=$((PASS + 1))
@@ -164,16 +168,19 @@ jobs:
 
       - name: "Assert: nested subcommand --help works"
         run: |
+          # `msg show` is `msg info`; `plugin list` is `plugin trusted`; `env` has
+          # no subcommands (flags only); `hf *` was renamed `frame *`; and the
+          # `pkg *` group never existed — those are top-level commands.
           for subcmd in "topic list" "topic echo" "topic pub" \
                         "node list" "node info" "node kill" \
                         "param get" "param set" "param list" \
-                        "msg list" "msg show" \
-                        "pkg install" "pkg remove" "pkg list" \
-                        "plugin list" "plugin enable" "plugin disable" \
+                        "msg list" "msg info" "msg hash" \
+                        "plugin trusted" "plugin verify" \
+                        "plugin enable" "plugin disable" \
                         "cache info" "cache clean" \
                         "record list" "record info" \
-                        "env freeze" "env restore" \
-                        "hf list" "hf echo" "hf tree"; do
+                        "service list" "action list" \
+                        "frame list" "frame echo" "frame tree"; do
             $HORUS $subcmd --help > /dev/null 2>&1 || { echo "FAIL: 'horus $subcmd --help' failed"; exit 1; }
           done
           echo "PASS: all nested subcommand --help exit 0"
@@ -474,7 +481,7 @@ jobs:
           # Recreate SHM dirs for subsequent tests
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       # ─────────────────────────────────────────────────
       # 10. horus record — recording management
@@ -728,7 +735,7 @@ jobs:
           # Create namespaced SHM directory structure
           SHM_DIR="/dev/shm/horus_ci_${GITHUB_RUN_ID:-$$}"
           sudo mkdir -p "$SHM_DIR"/{topics,nodes,control,network,scheduler}
-          sudo chmod 777 "$SHM_DIR" "$SHM_DIR"/topics
+          sudo chmod -R 777 "$SHM_DIR"
 
       - name: Build Workspace
         run: cargo build --workspace --release
@@ -777,7 +784,10 @@ jobs:
 
       - name: "Assert: Topic send/recv roundtrip works"
         run: |
-          cargo test -p horus_core --release --lib -- communication::topic::tests --nocapture -- --test-threads=1
+          # One `--` only: a second one makes libtest treat `--test-threads=1`
+          # as another name filter instead of the thread setting, so these tests
+          # silently ran in parallel and blew the stack.
+          cargo test -p horus_core --release --lib -- communication::topic::tests --nocapture --test-threads=1
         timeout-minutes: 3
         env:
           RUST_BACKTRACE: 1

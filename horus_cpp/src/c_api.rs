@@ -2157,11 +2157,7 @@ mod tests {
             extern "C" fn accept(_: *const u8, _: usize) -> u8 {
                 0
             }
-            extern "C" fn execute(
-                _: *mut action_ffi::FfiActionGoalHandle,
-                _: *const u8,
-                _: usize,
-            ) {
+            extern "C" fn execute(_: *mut action_ffi::FfiActionGoalHandle, _: *const u8, _: usize) {
             }
 
             horus_action_server_set_accept_handler(server, accept);

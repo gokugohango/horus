@@ -668,9 +668,7 @@ where
                 .name(format!("horus-action-{}", A::name()))
                 .spawn(move || {
                     let outcome = callback(handle);
-                    events
-                        .lock()
-                        .push(ServerEvent::Completed(goal_id, outcome));
+                    events.lock().push(ServerEvent::Completed(goal_id, outcome));
                 });
 
             match spawn {

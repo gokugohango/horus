@@ -101,9 +101,7 @@ impl Drop for ShmTestGuard {
 pub fn cleanup_stale_shm() -> ShmTestGuard {
     SHM_DEPTH.with(|d| {
         if d.get() == 0 {
-            let guard = shm_test_lock()
-                .lock()
-                .unwrap_or_else(|e| e.into_inner());
+            let guard = shm_test_lock().lock().unwrap_or_else(|e| e.into_inner());
             SHM_HELD.with(|h| *h.borrow_mut() = Some(guard));
         }
         d.set(d.get() + 1);

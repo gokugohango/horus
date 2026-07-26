@@ -1191,7 +1191,9 @@ mod tests {
 
         // No project context stays deterministic (first-match order) — unchanged.
         assert_eq!(
-            PackageSourceResolver::without_context().resolve("redis").source,
+            PackageSourceResolver::without_context()
+                .resolve("redis")
+                .source,
             DepSource::CratesIo
         );
     }

@@ -779,8 +779,8 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let bin = write_temp_binary(&tmp, "horus-g", b"global tool");
         let mut entry = make_test_entry("g-pkg", bin.clone());
-        entry.checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
-            .to_string();
+        entry.checksum =
+            "sha256:0000000000000000000000000000000000000000000000000000000000000000".to_string();
 
         let exec = gate_executor(tmp.path().join("trusted_plugins.json"));
         exec.ensure_execution_allowed(&bin, Some(&entry), PluginOrigin::Trusted, "g")

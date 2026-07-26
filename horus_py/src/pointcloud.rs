@@ -7,8 +7,8 @@ use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyTuple};
 
-use crate::tensor_convert;
 use crate::tensor::PyTensorHandle;
+use crate::tensor_convert;
 
 /// HORUS PointCloud — zero-copy shared memory point cloud with numpy interop.
 ///

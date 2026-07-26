@@ -264,8 +264,8 @@ impl FfiActionGoalHandle {
             return;
         }
         self.finished = true;
-        let wire = JsonWireMessage::from_json(result_json, self.goal_id, status as u8)
-            .or_else(|| {
+        let wire =
+            JsonWireMessage::from_json(result_json, self.goal_id, status as u8).or_else(|| {
                 // Oversize result: still terminate the goal so the client isn't
                 // left hanging; deliver a null payload with the same status.
                 JsonWireMessage::from_json("null", self.goal_id, status as u8)
@@ -765,13 +765,23 @@ mod tests {
 
         // The server completes both goals (as its goal threads would) and routes them.
         let res_a =
-            JsonWireMessage::from_json(r#"{"who":"a"}"#, gid_a, FfiGoalStatus::Succeeded as u8).unwrap();
+            JsonWireMessage::from_json(r#"{"who":"a"}"#, gid_a, FfiGoalStatus::Succeeded as u8)
+                .unwrap();
         let res_b =
-            JsonWireMessage::from_json(r#"{"who":"b"}"#, gid_b, FfiGoalStatus::Succeeded as u8).unwrap();
+            JsonWireMessage::from_json(r#"{"who":"b"}"#, gid_b, FfiGoalStatus::Succeeded as u8)
+                .unwrap();
         {
             let mut ev = server.events.lock().unwrap();
-            ev.push(FfiServerEvent::Completed(gid_a, FfiGoalStatus::Succeeded, res_a));
-            ev.push(FfiServerEvent::Completed(gid_b, FfiGoalStatus::Succeeded, res_b));
+            ev.push(FfiServerEvent::Completed(
+                gid_a,
+                FfiGoalStatus::Succeeded,
+                res_a,
+            ));
+            ev.push(FfiServerEvent::Completed(
+                gid_b,
+                FfiGoalStatus::Succeeded,
+                res_b,
+            ));
         }
         action_server_process(&mut server);
 

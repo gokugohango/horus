@@ -223,7 +223,12 @@ pub fn encode_announcement(
         magic: MAGIC,
         version: VERSION,
         // Always set the discriminator (bit 7); OR in has_secret (bit 0).
-        flags: ANNOUNCEMENT_FLAG | if has_secret { ANNOUNCEMENT_HAS_SECRET } else { 0 },
+        flags: ANNOUNCEMENT_FLAG
+            | if has_secret {
+                ANNOUNCEMENT_HAS_SECRET
+            } else {
+                0
+            },
         peer_id: *peer_id,
         data_port,
         secret_hash: *secret_hash,

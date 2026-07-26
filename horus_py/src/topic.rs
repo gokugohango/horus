@@ -23,13 +23,6 @@
 
 use horus::communication::Topic;
 use horus_core::memory::{DepthImage, Image, PointCloud};
-use horus_types::{
-    Accel, AccelStamped, Clock, DiagnosticReport, DiagnosticStatus, DiagnosticValue, EmergencyStop,
-    GenericMessage, Heartbeat, NodeHeartbeat, Point3, Pose2D, Pose3D, PoseStamped,
-    PoseWithCovariance, Quaternion, ResourceUsage, SafetyStatus, TimeReference, TransformStamped,
-    Twist, TwistWithCovariance, Vector3,
-};
-use horus_robotics::CmdVel;
 use horus_robotics::messages::audio::AudioFrame;
 use horus_robotics::messages::control::{
     DifferentialDriveCommand, JointCommand, MotorCommand, PidConfig, ServoCommand, TrajectoryPoint,
@@ -53,6 +46,13 @@ use horus_robotics::messages::sensor::{
 };
 use horus_robotics::messages::tracking::{TrackedObject, TrackingHeader};
 use horus_robotics::messages::vision::{CameraInfo, CompressedImage, RegionOfInterest, StereoInfo};
+use horus_robotics::CmdVel;
+use horus_types::{
+    Accel, AccelStamped, Clock, DiagnosticReport, DiagnosticStatus, DiagnosticValue, EmergencyStop,
+    GenericMessage, Heartbeat, NodeHeartbeat, Point3, Pose2D, Pose3D, PoseStamped,
+    PoseWithCovariance, Quaternion, ResourceUsage, SafetyStatus, TimeReference, TransformStamped,
+    Twist, TwistWithCovariance, Vector3,
+};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use serde::{de::DeserializeOwned, Serialize};

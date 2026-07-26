@@ -432,8 +432,7 @@ mod tests {
         );
     }
 
-    static SHUTDOWN_COUNTER: std::sync::atomic::AtomicU32 =
-        std::sync::atomic::AtomicU32::new(0);
+    static SHUTDOWN_COUNTER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     extern "C" fn test_shutdown_callback() {
         SHUTDOWN_COUNTER.fetch_add(1, Ordering::Relaxed);
     }

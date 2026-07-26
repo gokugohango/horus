@@ -344,7 +344,10 @@ fn topic_overflow_rejects_newest_keeps_oldest() {
         match pub_t.try_send(i) {
             Ok(()) => accepted.push(i),
             Err(returned) => {
-                assert_eq!(returned, i, "a rejected send returns the NEW message unchanged");
+                assert_eq!(
+                    returned, i,
+                    "a rejected send returns the NEW message unchanged"
+                );
                 rejected_any = true;
             }
         }
@@ -2678,9 +2681,15 @@ fn fanout_shm_oversized_serde_delivered_via_spill() {
             // Register both endpoints on the fanout path and confirm the pub->sub
             // channel is live (so the oversized send below actually reaches
             // try_send_serde rather than the n_subs==0 early-return).
-            assert!(t.try_send("hi".to_string()).is_ok(), "small message should fit");
+            assert!(
+                t.try_send("hi".to_string()).is_ok(),
+                "small message should fit"
+            );
             let _ = t.try_recv(); // registers subscriber 0
-            assert!(t.try_send("live".to_string()).is_ok(), "small message should fit");
+            assert!(
+                t.try_send("live".to_string()).is_ok(),
+                "small message should fit"
+            );
             assert_eq!(
                 t.try_recv(),
                 Some("live".to_string()),
@@ -5908,8 +5917,14 @@ fn multithread_nonpod_subscribers_each_get_full_stream() {
         producer.backend_name(),
     );
     let expected: Vec<String> = (1..=n).map(|v| format!("m{v}")).collect();
-    assert_eq!(got1, expected, "{t1} (multi-thread non-POD broadcast) must receive every message");
-    assert_eq!(got2, expected, "{t2} (multi-thread non-POD broadcast) must receive every message");
+    assert_eq!(
+        got1, expected,
+        "{t1} (multi-thread non-POD broadcast) must receive every message"
+    );
+    assert_eq!(
+        got2, expected,
+        "{t2} (multi-thread non-POD broadcast) must receive every message"
+    );
 }
 
 #[test]
@@ -5949,7 +5964,11 @@ fn same_thread_multihandle_nonpod_serde_flush_fix() {
         got
     };
     let expected: Vec<String> = (1..=n).map(|v| format!("m{v}")).collect();
-    assert_eq!(drain(&sub1), expected, "sub1 (same-thread, below flush interval)");
+    assert_eq!(
+        drain(&sub1),
+        expected,
+        "sub1 (same-thread, below flush interval)"
+    );
     assert_eq!(
         drain(&sub2),
         expected,
@@ -6021,7 +6040,12 @@ fn broadcast_subscriber_join_midstream() {
     // to one subscriber) and every value actually sent (no torn/garbage).
     for (who, g) in [("sub1", &g1), ("sub2", &g2)] {
         for w in g.windows(2) {
-            assert!(w[0] < w[1], "{who} not strictly increasing: {} >= {}", w[0], w[1]);
+            assert!(
+                w[0] < w[1],
+                "{who} not strictly increasing: {} >= {}",
+                w[0],
+                w[1]
+            );
         }
         for &v in g {
             assert!((1..=n).contains(&v), "{who} torn/garbage value {v}");
@@ -6036,7 +6060,10 @@ fn broadcast_subscriber_join_midstream() {
         n
     );
     // sub2 joined late → a non-empty in-order suffix (broadcast delivers to it too).
-    assert!(!g2.is_empty(), "sub2 (late broadcast subscriber) received nothing");
+    assert!(
+        !g2.is_empty(),
+        "sub2 (late broadcast subscriber) received nothing"
+    );
 }
 
 /// SAFETY-CRITICAL (softmata-brain): `send_shm_mp_pod`/`_serde`/`_colo` claim a ring
@@ -6105,7 +6132,11 @@ fn mp_send_no_overshoot_corruption() {
                     "GARBAGE value {:#x} (overshoot wrote a torn/aliased slot)",
                     v
                 );
-                assert!(seen.insert(v), "DUPLICATE value {:#x} (overshoot re-used a slot)", v);
+                assert!(
+                    seen.insert(v),
+                    "DUPLICATE value {:#x} (overshoot re-used a slot)",
+                    v
+                );
                 count += 1;
             }
             None => std::thread::yield_now(),

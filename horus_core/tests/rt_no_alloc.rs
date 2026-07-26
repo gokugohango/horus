@@ -73,7 +73,10 @@ fn rt_steady_state_recv_compute_send_is_allocation_free() {
     // The first send/recv lazily initializes each topic's SHM backend, which
     // allocates. Do it here, where allocations are allowed, so the measured loop
     // below runs against fully-initialized backends.
-    reading_pub.send(Reading { value: 1.0, seq: 0.0 });
+    reading_pub.send(Reading {
+        value: 1.0,
+        seq: 0.0,
+    });
     let _ = reading_sub.recv();
     command_pub.send(Command {
         output: 0.0,
@@ -106,7 +109,11 @@ fn rt_steady_state_recv_compute_send_is_allocation_free() {
 
     // Reaching here means 200 steady-state recv → compute → send cycles ran with
     // zero heap allocations under the RT guard.
-    assert_eq!(state, 199.0 * 0.5, "control loop should have processed readings");
+    assert_eq!(
+        state,
+        199.0 * 0.5,
+        "control loop should have processed readings"
+    );
 }
 
 /// Ticks the executor-driven `.no_alloc()` controller completed. A `static` +
@@ -172,7 +179,10 @@ fn no_alloc_node_runs_through_the_rt_executor() {
 
     let mut scheduler = Scheduler::new().tick_rate(1000_u64.hz());
     scheduler
-        .add(Producer { out: prod_out, n: 0 })
+        .add(Producer {
+            out: prod_out,
+            n: 0,
+        })
         .order(0)
         .build()
         .unwrap();

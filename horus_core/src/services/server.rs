@@ -701,7 +701,7 @@ mod tests {
         // Inject a raw request whose response_topic the transport will reject
         // (>255 chars) — what a buggy / non-conforming client could send.
         let raw_req: Topic<ServiceRequest<PanicReproReq>> =
-            Topic::new(&PanicReproService::request_topic()).unwrap();
+            Topic::new(PanicReproService::request_topic()).unwrap();
         raw_req.send(ServiceRequest {
             request_id: 1,
             payload: PanicReproReq { v: 7 },

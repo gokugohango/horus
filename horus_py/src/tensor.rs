@@ -1193,12 +1193,20 @@ mod fpy1_tests {
             handle: Some(handle),
             view_keepalive: None,
         };
-        assert_eq!(pool.stats().total_refcount, 1, "one live handle after alloc");
+        assert_eq!(
+            pool.stats().total_refcount,
+            1,
+            "one live handle after alloc"
+        );
 
         // Model `__array_interface__` export: retain a clone into the keepalive.
         let clone = t.handle.as_ref().unwrap().clone();
         t.view_keepalive = Some(clone);
-        assert_eq!(pool.stats().total_refcount, 2, "export retains a second ref");
+        assert_eq!(
+            pool.stats().total_refcount,
+            2,
+            "export retains a second ref"
+        );
 
         // The REAL release() — nulls `handle`, must leave `view_keepalive` intact.
         t.release();

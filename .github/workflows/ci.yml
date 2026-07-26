@@ -13,6 +13,11 @@ env:
   CARGO_TERM_COLOR: always
   # Allow warnings on dev branch, strict on main
   RUSTFLAGS: ${{ github.ref == 'refs/heads/main' && '-D warnings' || '-W warnings' }}
+  # horus_manager's cargo_gen/cmake_gen/new/pkg tests generate .horus build
+  # files, which needs the HORUS source tree. find_horus_source_dir() only
+  # probes ~/softmata/horus, ~/horus, /opt/horus etc. — none of which exist
+  # on a runner — so point it at the checkout.
+  HORUS_SOURCE: ${{ github.workspace }}
 
 permissions:
   contents: read

@@ -15,6 +15,11 @@ env:
   CARGO_TERM_COLOR: always
   HORUS: ./target/release/horus
   NO_COLOR: 1
+  # horus_manager's cargo_gen/cmake_gen/new/pkg tests generate .horus build
+  # files, which needs the HORUS source tree. find_horus_source_dir() only
+  # probes ~/softmata/horus, ~/horus, /opt/horus etc. — none of which exist
+  # on a runner — so point it at the checkout.
+  HORUS_SOURCE: ${{ github.workspace }}
 
 jobs:
   # Cross-process IPC integration tests
@@ -58,13 +63,16 @@ jobs:
           sudo sysctl -w kernel.shmall=2147483648
 
       - name: Build Workspace
-        run: cargo build --workspace --release
+        # --tests so the integration-test binaries are compiled here rather than
+        # inside the timed step below; the previous run spent its whole 10-minute
+        # budget in rustc and was killed before a single test ran.
+        run: cargo build --workspace --release --tests
 
       # Run integration tests with extended timeout
       - name: Run IPC Integration Tests
         run: |
           cargo test --workspace --release --test '*' -- --test-threads=1 --nocapture
-        timeout-minutes: 10
+        timeout-minutes: 45
         env:
           RUST_BACKTRACE: 1
           RUST_LOG: debug

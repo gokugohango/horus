@@ -4604,14 +4604,21 @@ name = "minimal"
             "tokio should be in Cargo.toml before removal"
         );
 
-        // Remove serde — should regenerate .horus/Cargo.toml without serde
+        // Remove serde — the user's declaration goes away, but cargo_gen's
+        // write_implicit_deps re-adds serde because message! / #[derive] expand
+        // to serde paths and need it as a *direct* dep. So assert on the
+        // user's pinned entry, not on the substring "serde".
         run_remove_dep("serde".to_string()).unwrap();
         std::env::set_current_dir(&original_dir).unwrap();
 
         let cargo_after = fs::read_to_string(&cargo_path).unwrap();
         assert!(
-            !cargo_after.contains("serde"),
-            "serde should be gone from Cargo.toml after removal"
+            !cargo_after.contains("serde = \"1.0\""),
+            "user-declared serde 1.0 should be gone from Cargo.toml after removal"
+        );
+        assert!(
+            cargo_after.contains("serde = { version = \"1\", features = [\"derive\"] }"),
+            "implicit serde (for message!/derive) should be re-added"
         );
         assert!(
             cargo_after.contains("tokio"),
@@ -6834,11 +6841,17 @@ serde = { version = "1.0", source = "crates.io" }
         );
         assert_eq!(manifest.dependencies.len(), 2);
 
-        // Verify .horus/Cargo.toml was regenerated without serde
+        // Verify .horus/Cargo.toml was regenerated without the user's serde.
+        // cargo_gen::write_implicit_deps re-adds serde (message!/#[derive] need
+        // it as a direct dep), so check for the pinned entry, not "serde".
         let cargo_after = fs::read_to_string(&cargo_path).unwrap();
         assert!(
-            !cargo_after.contains("serde"),
-            "serde gone from generated Cargo.toml"
+            !cargo_after.contains("serde = \"1.0\""),
+            "user-declared serde 1.0 gone from generated Cargo.toml"
+        );
+        assert!(
+            cargo_after.contains("serde = { version = \"1\", features = [\"derive\"] }"),
+            "implicit serde re-added by cargo_gen"
         );
         assert!(
             cargo_after.contains("tokio"),
@@ -7029,7 +7042,16 @@ serde = { version = "1.0", source = "crates.io" }
 
         // Verify both build files regenerated correctly
         let cargo_after = fs::read_to_string(&cargo_path).unwrap();
-        assert!(!cargo_after.contains("serde"), "serde gone from Cargo.toml");
+        // Implicit serde is always re-added by cargo_gen; the user's pin is what
+        // must disappear.
+        assert!(
+            !cargo_after.contains("serde = \"1.0\""),
+            "user-declared serde 1.0 gone from Cargo.toml"
+        );
+        assert!(
+            cargo_after.contains("serde = { version = \"1\", features = [\"derive\"] }"),
+            "implicit serde re-added by cargo_gen"
+        );
         assert!(
             cargo_after.contains("nalgebra"),
             "nalgebra still in Cargo.toml"

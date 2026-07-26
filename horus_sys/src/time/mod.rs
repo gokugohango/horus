@@ -105,7 +105,8 @@ pub struct TimerResolutionGuard {
 pub fn set_finest_resolution() -> anyhow::Result<TimerResolutionGuard> {
     #[cfg(target_os = "windows")]
     {
-        use windows_sys::Win32::Media::{timeBeginPeriod, timeEndPeriod};
+        // timeEndPeriod is imported where it is used, in TimerResolutionGuard::drop.
+        use windows_sys::Win32::Media::timeBeginPeriod;
         // SAFETY: timeBeginPeriod(1) is a safe Windows API call
         let result = unsafe { timeBeginPeriod(1) };
         if result != 0 {

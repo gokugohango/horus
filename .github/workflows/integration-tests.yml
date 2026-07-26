@@ -11,6 +11,12 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
+concurrency:
+  # Cancel superseded runs: a rapid series of pushes used to leave every
+  # earlier run grinding to completion long after it was obsolete.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   HORUS: ./target/release/horus

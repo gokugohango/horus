@@ -7,6 +7,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  # Cancel superseded runs: a rapid series of pushes used to leave every
+  # earlier run grinding to completion long after it was obsolete.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write

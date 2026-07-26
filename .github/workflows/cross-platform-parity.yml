@@ -15,8 +15,14 @@ on:
   pull_request:
     branches: [main, dev]
   push:
-    branches: [main, dev]
+    branches: [main]  # dev is kept identical to main; PRs still gate
   workflow_dispatch:
+
+concurrency:
+  # Cancel superseded runs: a rapid series of pushes used to leave every
+  # earlier run grinding to completion long after it was obsolete.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always

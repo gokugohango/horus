@@ -25,6 +25,12 @@ on:
 # Minimal default GITHUB_TOKEN scope for every job (CodeQL actions/missing-workflow-permissions).
 # All jobs only check out the repo and run tests — none push, comment, or release. upload-artifact
 # uses the Actions runtime token and codecov uses CODECOV_TOKEN, so both work with a read-only token.
+concurrency:
+  # Cancel superseded runs: a rapid series of pushes used to leave every
+  # earlier run grinding to completion long after it was obsolete.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

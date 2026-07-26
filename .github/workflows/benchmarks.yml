@@ -2,13 +2,19 @@ name: Benchmark CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main ]  # dev is kept identical to main; PRs still gate
   pull_request:
     branches: [ main, dev ]
   schedule:
     # Run weekly on Monday at 00:00 UTC
     - cron: '0 0 * * 1'
   workflow_dispatch:
+
+concurrency:
+  # Cancel superseded runs: a rapid series of pushes used to leave every
+  # earlier run grinding to completion long after it was obsolete.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always

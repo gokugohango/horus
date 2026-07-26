@@ -3,9 +3,13 @@ FROM archlinux:latest
 ENV CARGO_HOME=/root/.cargo
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-RUN pacman -Sy --noconfirm \
+# -Syu, not -Sy: a partial upgrade against a stale image index is unsupported on
+# Arch and fails with "could not satisfy dependencies". `cargo` is also dropped
+# — it is provided by `rust`, and asking for both makes the transaction
+# unsatisfiable.
+RUN pacman -Syu --noconfirm \
     gcc pkg-config openssl systemd alsa-lib \
-    clang git rust cargo
+    clang git rust
 
 WORKDIR /horus
 COPY . .

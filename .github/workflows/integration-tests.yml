@@ -71,12 +71,15 @@ jobs:
         # --tests so the integration-test binaries are compiled here rather than
         # inside the timed step below; the previous run spent its whole 10-minute
         # budget in rustc and was killed before a single test ran.
-        run: cargo build --workspace --release --tests
+        # horus_py is excluded because its pyo3 extension-module feature leaves
+        # the Python symbols undefined, so its lib test cannot link — the same
+        # reason ci.yml and safety.yml exclude it.
+        run: cargo build --workspace --exclude horus_py --release --tests
 
       # Run integration tests with extended timeout
       - name: Run IPC Integration Tests
         run: |
-          cargo test --workspace --release --test '*' -- --test-threads=1 --nocapture
+          cargo test --workspace --exclude horus_py --release --test '*' -- --test-threads=1 --nocapture
         timeout-minutes: 45
         env:
           RUST_BACKTRACE: 1

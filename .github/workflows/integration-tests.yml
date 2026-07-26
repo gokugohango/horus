@@ -228,7 +228,9 @@ jobs:
 
           # Assert horus.toml content is valid
           grep -q 'name = "test_robot_rs"' test_robot_rs/horus.toml || { echo "FAIL: wrong name in horus.toml"; exit 1; }
-          grep -q 'language = "rust"'       test_robot_rs/horus.toml || { echo "FAIL: wrong language in horus.toml"; exit 1; }
+          # No `language` key: horus.toml does not carry one for either Rust or
+          # Python projects — language is inferred from the source files present
+          # (detect_context). Assert the generated layout instead.
           grep -q 'version = '            test_robot_rs/horus.toml || { echo "FAIL: no version in horus.toml"; exit 1; }
 
           # Assert main.rs has Scheduler usage
@@ -253,7 +255,7 @@ jobs:
 
           # Assert horus.toml content
           grep -q 'name = "test_robot_py"'  test_robot_py/horus.toml || { echo "FAIL: wrong name"; exit 1; }
-          grep -q 'language = "python"'     test_robot_py/horus.toml || { echo "FAIL: wrong language"; exit 1; }
+          # See the Rust project step: horus.toml has no `language` key.
 
           # Assert main.py has horus API usage
           grep -q "import horus" test_robot_py/main.py || { echo "FAIL: main.py missing 'import horus'"; exit 1; }

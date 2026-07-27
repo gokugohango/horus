@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [main, dev]
   push:
-    branches: [main, dev]
+    branches: [main]  # dev mirrors main; PRs still gate dev work
   workflow_dispatch:
 
 concurrency:

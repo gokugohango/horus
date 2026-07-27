@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main, master, dev]
   push:
-    branches: [main, master, dev]
+    branches: [main, master]  # dev mirrors main; PRs still gate dev work
 
 concurrency:
   # Cancel superseded runs: a rapid series of pushes used to leave every

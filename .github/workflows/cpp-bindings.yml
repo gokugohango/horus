@@ -14,7 +14,7 @@ on:
       - 'horus_types/**'
       - 'horus_library/**'
   push:
-    branches: [main, dev]
+    branches: [main]  # dev mirrors main; PRs still gate dev work
     paths:
       - 'horus_cpp/**'
       - 'horus_core/**'

@@ -719,22 +719,32 @@ pub fn read_latest_slot_bytes(
     // SAFETY: mmap is validated to be at least TOPIC_HEADER_SIZE (640) bytes above.
     // All offsets (12, 20, 64, 72, 76, 80) are within the header and read_unaligned
     // handles any alignment. base is a valid pointer from the mmap.
-    let type_size = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, type_size)) as *const u32) } as usize;
+    let type_size = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, type_size)) as *const u32)
+    } as usize;
     // SAFETY: base is a valid mmap pointer; offset 20 is within the validated header region;
     // read_unaligned handles any alignment for the u8 is_pod field.
     let is_pod_raw = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, is_pod))) };
     // SAFETY: base is a valid mmap pointer; offset 64 is within the validated header region;
     // read_unaligned handles any alignment for the u64 seq/head field.
-    let write_idx = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, sequence_or_head)) as *const u64) };
+    let write_idx = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, sequence_or_head)) as *const u64)
+    };
     // SAFETY: base is a valid mmap pointer; offset 72 is within the validated header region;
     // read_unaligned handles any alignment for the u32 capacity field.
-    let capacity = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, capacity)) as *const u32) } as usize;
+    let capacity = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, capacity)) as *const u32)
+    } as usize;
     // SAFETY: base is a valid mmap pointer; offset 76 is within the validated header region;
     // read_unaligned handles any alignment for the u32 cap_mask field.
-    let cap_mask = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, capacity_mask)) as *const u32) } as usize;
+    let cap_mask = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, capacity_mask)) as *const u32)
+    } as usize;
     // SAFETY: base is a valid mmap pointer; offset 80 is within the validated header region;
     // read_unaligned handles any alignment for the u32 slot_size field.
-    let slot_size = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, slot_size)) as *const u32) } as usize;
+    let slot_size = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, slot_size)) as *const u32)
+    } as usize;
 
     let is_pod = is_pod_raw == POD_YES;
 
@@ -806,8 +816,11 @@ pub fn read_latest_slot_bytes(
 
     // Read topic_kind (byte 48 in cache line 1) and messages_total (offset 56).
     // SAFETY: mmap is validated to be at least TOPIC_HEADER_SIZE (640) bytes.
-    let topic_kind = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, topic_kind))) };
-    let messages_total = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, messages_total)) as *const u64) };
+    let topic_kind =
+        unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, topic_kind))) };
+    let messages_total = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, messages_total)) as *const u64)
+    };
 
     Some(TopicSlotRead {
         payload,
@@ -843,7 +856,9 @@ pub fn read_topic_sequence(path: &std::path::Path) -> Option<u64> {
         return None;
     }
     // SAFETY: offset 64 is within the validated header (sequence_or_head field).
-    let seq = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, sequence_or_head)) as *const u64) };
+    let seq = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, sequence_or_head)) as *const u64)
+    };
     Some(seq)
 }
 
@@ -870,7 +885,9 @@ pub fn read_topic_messages_total(path: &std::path::Path) -> Option<u64> {
         return None;
     }
     // SAFETY: offset 56 is within the validated header (messages_total field).
-    let total = unsafe { std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, messages_total)) as *const u64) };
+    let total = unsafe {
+        std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, messages_total)) as *const u64)
+    };
     Some(total)
 }
 
@@ -918,15 +935,23 @@ pub fn read_topic_header_info(path: &std::path::Path) -> Option<TopicHeaderInfo>
 
     // SAFETY: all offsets are within the validated 640-byte header.
     unsafe {
-        let type_size = std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, type_size)) as *const u32);
+        let type_size =
+            std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, type_size)) as *const u32);
         let is_pod_raw = std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, is_pod)));
         let topic_kind = std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, topic_kind)));
-        let messages_total = std::ptr::read_unaligned(base.add(offset_of!(TopicHeader, messages_total)) as *const u64);
-        let publisher_count = (*(base.add(offset_of!(TopicHeader, publisher_count)) as *const AtomicU32)).load(Ordering::Relaxed);
-        let subscriber_count = (*(base.add(offset_of!(TopicHeader, subscriber_count)) as *const AtomicU32)).load(Ordering::Relaxed);
+        let messages_total = std::ptr::read_unaligned(
+            base.add(offset_of!(TopicHeader, messages_total)) as *const u64,
+        );
+        let publisher_count = (*(base.add(offset_of!(TopicHeader, publisher_count))
+            as *const AtomicU32))
+            .load(Ordering::Relaxed);
+        let subscriber_count = (*(base.add(offset_of!(TopicHeader, subscriber_count))
+            as *const AtomicU32))
+            .load(Ordering::Relaxed);
 
         // type_name at offset 216, 32 bytes
-        let name_bytes = std::slice::from_raw_parts(base.add(offset_of!(TopicHeader, type_name)), 32);
+        let name_bytes =
+            std::slice::from_raw_parts(base.add(offset_of!(TopicHeader, type_name)), 32);
         let end = name_bytes.iter().position(|&b| b == 0).unwrap_or(32);
         let type_name = std::str::from_utf8(&name_bytes[..end])
             .unwrap_or("")
